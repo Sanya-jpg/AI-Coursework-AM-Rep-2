@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Equity Research Valuation Terminal</title>
+<style>
+:root{
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#0a1220;--panel:#111c30;--panel2:#16233b;--line:#25365a;--text:#eaf0fa;--muted:#8d9cb8;
+  --accent:#6aa9ff;--calc:#8fd3ff;--inbg:#0c1729;--inline:#8a6a1f;--intext:#ffd98a;
+  --pos:#35d39a;--neg:#ff6372;--warn:#f2b640;--head:#0a1220;--heat-l:30%;--shadow:none;
+  --inp-tint:#2a2110;--hero:#15427a;--herotext:#ffffff;--upbg:#0f3a2e;--dnbg:#45161d;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#eef2f8;--panel:#ffffff;--panel2:#f2f5fa;--line:#cdd6e5;--text:#0f1b33;--muted:#5a6a88;
+  --accent:#1f5fd0;--calc:#0b5a8a;--inbg:#fffaf0;--inline:#d4a437;--intext:#7a4b00;
+  --pos:#0c8f5f;--neg:#d12b3c;--warn:#a86a00;--head:#0f1b33;--heat-l:82%;color-scheme:light;
+  --inp-tint:#fff3d2;--hero:#cfe1ff;--herotext:#0b2a5a;--upbg:#d9f4e8;--dnbg:#fadadd;
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{margin:0}
+body{display:flex;flex-direction:column;min-height:100vh;background:var(--bg);color:var(--text);font:14px/1.5 "Segoe UI","Helvetica Neue",Arial,sans-serif;font-variant-numeric:tabular-nums}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--head)}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--head);color:#eaf0fa;padding:7px 18px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+header.top h1{margin:0;font-size:15px;letter-spacing:.08em;font-weight:700}
+header.top .sub{color:#9fb0cf;font-size:11px}
+header.top .grow{flex:1}
+.badge{background:#1b2c4c;color:#cfe0ff;border:1px solid #30487a;border-radius:4px;padding:3px 9px;font-size:12px}
+button{font:inherit;cursor:pointer}
+.btn{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:4px;padding:6px 12px}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#06101f;font-weight:600}
+.btn.sm{padding:3px 9px;font-size:12px}
+nav.tabs{display:flex;gap:2px;flex-wrap:wrap;background:var(--panel);border-bottom:1px solid var(--line);padding:0 16px}
+nav.tabs button{background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);padding:7px 12px;font-weight:600;font-size:13px}
+nav.tabs button.on{color:var(--text);border-bottom-color:var(--accent)}
+nav.tabs button:hover{color:var(--text)}
+main{width:100%;max-width:1500px;margin:0 auto;padding:10px 16px 40px;flex:1;min-height:0;display:flex;flex-direction:column}
+body.fit{height:100vh}
+body.fit main{padding-bottom:10px;overflow:auto}
+#alerts{flex:none}
+section.view{display:none}
+section.view.on{display:flex;flex-direction:column;flex:1;min-height:0;gap:8px}
+#v-dash.on{display:flex;flex-direction:column;flex:1;min-height:0}
+h2{font-size:17px;margin:4px 0 12px;font-weight:700}
+h3{font-size:14px;margin:0 0 8px;font-weight:700}
+.card{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:6px;padding:14px 16px;margin-bottom:14px}
+.card.inp{background:var(--inp-tint);border:1px solid var(--inline);border-left-width:4px}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g31{grid-template-columns:minmax(0,3fr) minmax(0,1fr)}
+@media(max-width:980px){.g3,.g4,.g31{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){.g2,.g3,.g4,.g31{grid-template-columns:1fr}}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px}
+.kpi .l{color:var(--muted);font-size:12px}
+.kpi .v{font-size:24px;font-weight:700;color:var(--calc);margin-top:2px}
+.kpi .s{color:var(--muted);font-size:12px;margin-top:2px}
+.kpi.hero .v{font-size:34px}
+.pos{color:var(--pos)!important}.neg{color:var(--neg)!important}.mut{color:var(--muted)}
+.tip{display:inline-block;width:14px;height:14px;line-height:14px;text-align:center;border-radius:50%;background:var(--line);color:var(--text);font-size:10px;font-weight:700;margin-left:5px;cursor:help;position:relative;vertical-align:middle;font-style:normal}
+.tip:hover::after,.tip:focus::after{content:attr(data-tip);position:absolute;left:50%;bottom:130%;transform:translateX(-50%);width:260px;background:#000d;color:#fff;font-weight:400;font-size:12px;line-height:1.4;padding:8px 10px;border-radius:4px;z-index:50;text-align:left;pointer-events:none;white-space:normal}
+.alert{border-radius:5px;padding:5px 12px;margin-bottom:6px;border:1px solid;font-size:12.5px}
+.alert summary{cursor:pointer}
+.alert ul{margin:4px 0 0 18px;padding:0}
+.alert.err{background:#ff63721a;border-color:var(--neg);color:var(--text)}
+.alert.err b{color:var(--neg)}
+.alert.warn{background:#f2b6401a;border-color:var(--warn)}
+.alert.warn b{color:var(--warn)}
+.alert.ok{background:#35d39a18;border-color:var(--pos)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:12px;align-items:center}
+.sw{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:middle;margin-right:5px}
+.sw.swin{border:2px solid var(--inline);background:var(--inbg)}
+.sw.calc{background:var(--panel2);border:1px solid var(--calc)}
+.sw.tv{background:repeating-linear-gradient(45deg,var(--line),var(--line) 3px,transparent 3px,transparent 6px);border:1px dashed var(--muted)}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:10px;font-size:12px;color:var(--muted)}
+.inwrap{position:relative;display:flex;align-items:center}
+.in{width:100%;background:var(--inbg);color:var(--intext);border:1px solid var(--inline);border-radius:4px;padding:6px 8px;font:inherit;font-size:14px}
+.in:focus{outline:2px solid var(--accent);outline-offset:1px}
+textarea.in{min-height:64px;resize:vertical}
+select.in{padding:6px 4px}
+.inwrap em{position:absolute;right:9px;color:var(--muted);font-style:normal;pointer-events:none;font-size:12px}
+.inwrap .in[type=number]{padding-right:28px}
+.req{color:var(--neg);margin-left:3px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+table.t{width:100%;border-collapse:collapse;font-size:13px}
+table.t th,table.t td{padding:6px 9px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+table.t th:first-child,table.t td:first-child{text-align:left;white-space:normal}
+table.t th{color:var(--muted);font-weight:600;background:var(--panel2);position:sticky;top:0}
+table.t td.c{color:var(--calc)}
+table.t td.tv,table.t th.tv{background:repeating-linear-gradient(45deg,transparent,transparent 5px,#8d9cb814 5px,#8d9cb814 10px)}
+table.t tr.tot td{font-weight:700;border-top:2px solid var(--line)}
+table.t input.in{width:84px;text-align:right;padding:4px 6px}
+.scroll{overflow-x:auto}
+svg.chart{width:100%;height:auto;display:block}
+svg .grid{stroke:var(--line);stroke-width:1}
+svg .ax{fill:var(--muted);font-size:11px}
+svg .vl{fill:var(--text);font-size:11px;font-weight:600}
+svg .lg{fill:var(--text);font-size:12px}
+.donutwrap{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.donut{width:170px;height:170px;flex:none}
+.leg div{margin:3px 0;font-size:13px}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-family:"Cambria Math","Times New Roman",serif;font-size:15px;overflow-x:auto}
+.heat td{text-align:center!important;font-weight:600;min-width:92px;padding:8px 6px}
+.heat td small{display:block;font-weight:400;font-size:11px;opacity:.85}
+.heat td.na{background:repeating-linear-gradient(45deg,var(--panel2),var(--panel2) 4px,transparent 4px,transparent 8px);color:var(--muted);font-weight:400}
+.heat td.base{outline:3px solid var(--accent);outline-offset:-3px}
+.heat th.hl{color:var(--accent)}
+.paper{background:#fff;color:#111;border-radius:4px;padding:34px 40px;font-family:Georgia,"Times New Roman",serif;line-height:1.55;max-width:900px}
+.paper h1{font-size:20px;margin:0 0 4px;letter-spacing:.04em}
+.paper h2{font-size:15px;margin:20px 0 6px;border-bottom:1px solid #999;padding-bottom:3px;color:#0d2a55}
+.paper table{border-collapse:collapse;width:100%;font-size:13px;margin:8px 0}
+.paper th,.paper td{border:1px solid #bbb;padding:4px 8px;text-align:right}
+.paper th:first-child,.paper td:first-child{text-align:left}
+.paper th{background:#e8edf5}
+.paper .meta td{border:0;padding:1px 8px 1px 0;text-align:left}
+.paper ul{margin:6px 0 6px 20px;padding:0}
+.paper p{margin:6px 0}
+textarea.txt{width:100%;min-height:220px;background:var(--inbg);color:var(--text);border:1px solid var(--line);border-radius:4px;padding:10px;font:12px/1.45 Consolas,Menlo,monospace}
+.note-small{font-size:12px;color:var(--muted)}
+.fref .card p{margin:4px 0}
+.ref{color:var(--accent);font-size:12px}
+
+/* ---- single-screen dashboard ---- */
+.dashgrid{flex:1;min-height:540px;display:grid;grid-template-columns:240px minmax(0,1fr);gap:10px}
+.dashleft{display:flex;flex-direction:column;gap:8px;min-height:0;min-width:0}
+.dashleft .apanel{flex:1;min-height:0}
+.keybox{flex:none;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:11px;line-height:1.3}
+.keybox .kh{font-weight:700;font-size:12px;margin-bottom:3px}
+.keybox .kr{display:flex;gap:6px;align-items:flex-start;margin:3px 0}
+.keybox .sw{flex:none;margin:1px 0 0;width:12px;height:12px}
+.apanel,.opanel{display:flex;flex-direction:column;min-height:0;border-radius:6px;overflow:hidden}
+.apanel{background:var(--inp-tint);border:2px solid var(--inline)}
+.opanel{background:var(--panel);border:2px solid var(--accent)}
+.phead{padding:6px 12px;font-weight:700;font-size:13px;display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex:none}
+.phead span{font-weight:400;font-size:11px}
+.phead.inh{background:var(--inline);color:#1b1300}
+.phead.outh{background:var(--accent);color:#04101f}
+.pbody{padding:8px 12px;overflow:auto;flex:1;min-height:0}
+.obody{padding:8px;display:flex;flex-direction:column;gap:8px;flex:1;min-height:0}
+.mf{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;font-size:12px}
+.mf .in{width:96px;padding:3px 6px;font-size:13px;text-align:right}
+.mf.ro b{color:var(--intext);font-weight:600}
+.mini{width:100%;border-collapse:collapse;font-size:12px;margin:6px 0}
+.mini th{color:var(--muted);font-weight:600;text-align:right;padding:2px 4px;border-bottom:1px solid var(--inline)}
+.mini td{text-align:right;padding:2px 4px;color:var(--intext)}
+.mini th:first-child,.mini td:first-child{text-align:left;color:var(--text)}
+.kpirow{display:grid;grid-template-columns:1.35fr 1fr 1fr 1fr;gap:8px;flex:none}
+.hk{border:1px solid var(--line);border-radius:5px;padding:6px 12px;background:var(--panel2);min-width:0}
+.hl{color:var(--muted);font-size:11.5px}
+.hv{font-size:22px;font-weight:700;color:var(--calc);line-height:1.2}
+.hs{color:var(--muted);font-size:11px}
+.dashgrid .hv{color:var(--text)}
+.hk.main{background:var(--hero);border-color:var(--accent)}
+.hk.main .hl,.hk.main .hs{color:var(--herotext);opacity:.8}
+.hk.main .hv{font-size:32px;color:var(--herotext)}
+.hk.inp{background:var(--inp-tint);border:1px dashed var(--inline)}
+.hk.inp .hv{color:var(--intext)}
+.hk.up{background:var(--upbg);border-color:var(--pos)}
+.hk.dn{background:var(--dnbg);border-color:var(--neg)}
+.hk.up .hv,.hk.dn .hv{font-size:30px}
+.strip{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;flex:none}
+.strip .hk{padding:4px 10px}
+.strip .hv{font-size:16px}
+.charts{flex:1;min-height:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:8px}
+.ccard{background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:5px 10px 4px;display:flex;flex-direction:column;min-height:0;min-width:0}
+.ccard h3{font-size:12px;margin:0 0 1px}
+.cbody{flex:1;min-height:0;min-width:0}
+.cbody>svg{width:100%;height:100%;display:block}
+.cbody .donutwrap{height:100%;flex-wrap:nowrap;gap:10px}
+.cbody .donut{flex:0 1 auto;height:100%;width:auto;max-width:50%}
+.cbody .leg div{font-size:11.5px;margin:2px 0}
+.xl{font-size:12px;margin:5px 0;line-height:1.35}
+.legend2{display:flex;gap:14px;font-size:11.5px;color:var(--muted);flex:none;margin-bottom:6px}
+@media(max-width:980px){
+  body.fit{height:auto}body.fit main{overflow:visible}
+  .dashgrid{grid-template-columns:1fr}
+  .kpirow,.strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .charts{grid-template-columns:1fr;grid-template-rows:none}.ccard{min-height:230px}
+}
+
+/* ---- single-screen layout for the other tabs ---- */
+.fillp{flex:1;min-height:0}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;flex:none}
+.keyl{margin-left:auto;display:flex;gap:12px;font-size:11.5px;color:var(--muted);align-items:center}
+.astrip{flex:none;display:flex;gap:16px;align-items:center;flex-wrap:wrap;background:var(--inp-tint);border:1.5px solid var(--inline);border-radius:5px;padding:4px 12px;font-size:12px}
+.astrip b{color:var(--intext)}
+.astrip span em{font-style:normal;color:var(--intext);font-weight:700;margin-left:4px}
+.astrip .btn{margin-left:auto}
+.cmp .fld{margin-bottom:5px;font-size:11px;gap:2px}
+.cmp .in{padding:3px 6px;font-size:13px}
+.cmp textarea.in{min-height:38px;height:40px}
+.igrid{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:16px}
+.g2c{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.isec h4{margin:0 0 6px;font-size:12.5px;color:var(--intext);border-bottom:1px solid var(--inline);padding-bottom:3px}
+.apanel table.t th{background:transparent;color:var(--muted);border-bottom-color:var(--inline)}
+.apanel table.t td{border-bottom-color:#8a6a1f55}
+table.t.cp th,table.t.cp td{padding:3px 8px;font-size:12px}
+table.t.cp input.in{width:66px}
+.capm{margin:2px 0 6px;border:1px dashed var(--inline);border-radius:5px;padding:4px 8px}
+.capm .ch{font-size:11px;color:var(--intext);margin-bottom:2px}
+.capm .cr{display:flex;gap:6px;align-items:flex-end;flex-wrap:wrap}
+.capm .cr .fld{margin:0;flex:1;min-width:56px}
+.capm .in{padding:2px 5px}
+.capm .cout{font-size:12px;font-weight:700;color:var(--calc);white-space:nowrap;padding-bottom:4px}
+.capm .cnote{font-size:11px;color:var(--muted);margin-top:2px;min-height:14px}
+.calcbox{border:1.5px solid var(--accent);border-radius:4px;padding:3px 8px;color:var(--calc);font-weight:700;background:var(--panel);font-size:13px;min-height:28px;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden}
+.calcbox small{font-weight:400;font-size:11px;color:var(--muted)}
+.mres{border:1.5px solid var(--accent);border-radius:5px;background:var(--panel);margin-top:6px;overflow:hidden}
+.mres .mh{background:var(--accent);color:#04101f;font-size:11.5px;font-weight:700;padding:2px 8px}
+.mres .mb{display:flex;gap:14px;padding:5px 10px;flex-wrap:wrap}
+.mres .mb div{min-width:70px}
+.mres .mb .hv{font-size:19px}
+.crow{flex:1;min-height:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.cols2{flex:1;min-height:0;display:grid;grid-template-columns:1.3fr 1fr;gap:8px}
+.col{display:flex;flex-direction:column;gap:8px;min-height:0;min-width:0;overflow:auto}
+.col>.ccard{flex:none}
+.col>.ccard.grow{flex:1;min-height:110px}
+.ccard .scroll{overflow-x:auto}
+.formula.sm{font-size:12.5px;padding:2px 8px;margin:3px 0;line-height:1.25}
+.ccard p{margin:3px 0;font-size:12px}
+.heat td{padding:5px 4px}
+.paperwrap{flex:1;min-height:0;overflow:auto;border-radius:4px;background:#c9d2e2}
+.paperwrap .paper{max-width:none;padding:18px 26px;font-size:12.5px;border-radius:0}
+.paper h2{margin:14px 0 4px}
+.notecols{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:8px}
+.notecols .col{overflow:hidden}
+.notecols textarea.txt{flex:1;min-height:0}
+#sensOut,#noteOut{flex:1;min-height:0;display:flex;flex-direction:column}
+.refgrid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:8px}
+.rcard{background:var(--panel);border:1px solid var(--line);border-radius:5px;padding:7px 10px;overflow:auto;min-height:0}
+.rcard h3{font-size:13.5px;margin:0 0 3px}
+.rcard .formula{font-size:14px;padding:4px 8px;margin:6px 0}
+.rcard p{margin:3px 0;font-size:12.5px;line-height:1.4}
+.rcard .ref{font-size:11px}
+.phead.refh{background:var(--line);color:var(--text)}
+#v-ddm table.t.cp th,#v-ddm table.t.cp td{padding:2px 8px}
+#v-ddm .ccard{padding:4px 10px}
+@media(max-height:800px){
+  #v-ddm table.t.cp th,#v-ddm table.t.cp td{padding:1px 8px;font-size:11.5px}
+  #v-ddm .formula.sm{margin:1px 0;padding:1px 8px;font-size:12px}
+  #v-ddm .ccard h3{margin:0}
+  #v-ddm .ccard .xl,#v-ddm .ccard p{font-size:11px;margin:1px 0}
+  #v-inputs table.t.cp th,#v-inputs table.t.cp td{padding:1px 8px}
+  #v-inputs table.t.cp input.in{padding:2px 6px}
+  #v-fc table.t.cp th,#v-fc table.t.cp td{padding:2px 8px}
+  #v-inputs .phead,#v-fc .phead,#v-ddm .phead,#v-sens .phead,#v-ref .phead,#v-note .phead{padding:4px 12px}
+}
+@media(max-height:800px){
+  #v-inputs table.t.cp th,#v-inputs table.t.cp td{padding:0 8px}
+  #v-inputs .igrid{gap:10px}
+}
+@media(max-height:760px){
+  #v-inputs .capm{margin:0 0 2px;padding:2px 6px}
+  #v-inputs .capm .cnote{min-height:0;margin:0}
+  #v-inputs .capm .ch{margin-bottom:0}
+  #v-inputs .capm .in{padding:1px 5px}
+  #v-inputs .fld{margin-bottom:2px}
+  #v-inputs .cmp textarea.in{height:28px;min-height:28px}
+  #v-inputs .isec h4{margin-bottom:3px}
+  #v-inputs .mres .mb{padding:2px 10px}
+  #v-inputs .mres .mb .hv{font-size:16px}
+}
+@media(max-height:760px){
+  #v-ref .rcard{padding:5px 8px}
+  #v-ref .rcard p{font-size:11.5px;margin:1px 0}
+  #v-ref .rcard .formula{font-size:12.5px;margin:3px 0;padding:2px 8px}
+  #v-ref .rcard h3{font-size:12.5px}
+}
+@media(max-height:720px){
+  #dashAssump .note-small{display:none}
+  #dashAssump .mf{margin-bottom:3px}
+  #dashAssump .mini td,#dashAssump .mini th{padding:1px 4px}
+  #v-ddm .ccard:has(>p:only-child){display:none}
+  #v-ddm .ccard>p{display:none}
+  #v-inputs .fld{margin-bottom:1px}
+  #v-inputs .cmp textarea.in{height:24px;min-height:24px}
+}
+@media(max-width:980px){
+  .igrid,.cols2,.crow,.notecols,.refgrid{grid-template-columns:1fr;grid-template-rows:none}
+  .col{overflow:visible}.ccard,.rcard{min-height:200px}
+}
+@media print{
+  body *{visibility:hidden}
+  #notePaper,#notePaper *{visibility:visible}
+  #notePaper{position:absolute;left:0;top:0;width:100%;max-width:none;box-shadow:none;padding:0}
+  body::before{display:none}
+  html,body,body.fit{height:auto}
+  body.fit main{overflow:visible}
+  .paperwrap{overflow:visible;background:none}
+}
+</style>
+</head>
+<body class="fit">
+<header class="top">
+  <div>
+    <h1>EQUITY RESEARCH VALUATION TERMINAL</h1>
+    <div class="sub">Multi-Stage Dividend Discount Model | Intrinsic Value Analysis</div>
+  </div>
+  <div class="grow"></div>
+  <span class="badge" id="coBadge"></span>
+  <button class="btn sm" data-act="theme" title="Switch light or dark display">Light / dark</button>
+</header>
+<nav class="tabs" id="tabs">
+  <button data-tab="dash" class="on">Valuation Dashboard</button>
+  <button data-tab="inputs">Company Inputs &amp; Assumptions</button>
+  <button data-tab="fc">Dividend Forecast</button>
+  <button data-tab="ddm">DDM Valuation</button>
+  <button data-tab="sens">Sensitivity Analysis</button>
+  <button data-tab="note">Equity Research Note</button>
+  <button data-tab="ref">Formula Reference</button>
+</nav>
+<main>
+  <div id="alerts"></div>
+  <section class="view on" id="v-dash"><div class="dashgrid"><div class="dashleft"><aside class="apanel" id="dashAssump"></aside><div class="keybox" id="dashKey"><div class="kh">Colour key</div><div class="kr"><i class="sw swin"></i><span><b>Amber:</b> inputs and assumptions you edit.</span></div><div class="kr"><i class="sw" style="background:var(--accent)"></i><span><b>Blue:</b> calculated model outputs.</span></div><div class="kr"><i class="sw tv"></i><span><b>Hatched:</b> stable-growth (terminal) year.</span></div><div class="kr"><i class="sw" style="background:var(--pos)"></i><i class="sw" style="background:var(--neg)"></i><span><b>Green / red:</b> upside / downside.</span></div></div></div><div class="opanel" id="dashOut"></div></div></section>
+  <section class="view" id="v-inputs"></section>
+  <section class="view" id="v-fc"></section>
+  <section class="view" id="v-ddm"></section>
+  <section class="view" id="v-sens"><div id="sensCtl"></div><div id="sensOut"></div></section>
+  <section class="view" id="v-note"><div id="noteCtl"></div><div id="noteOut"></div></section>
+  <section class="view" id="v-ref"></section>
+</main>
+
+<script>
+/*ENGINE_START*/
+const PRESETS = {
+  lecture: () => ({
+    preset: "lecture", name: "Growth-Tech Inc.", ticker: "GTI (illustrative)", sector: "Technology (illustrative)",
+    country: "Not specified", ccy: "USD", date: "2026-11-18", price: "50", shares: "",
+    desc: "Illustrative company from FM439 Lecture 4 (slides 39–44). All inputs are taken from the lecture example; this is not a real listed company.",
+    BE0: "10", epsH: "", dpsH: "", gH: "", roeH: "", payH: "",
+    capm: { rf: "", beta: "", erp: "" }, r: "9.9", rNote: "Required return of a comparable firm facing the same risks (Lecture 4, slide 44). The market price of $50 is the lecture’s rounded P0, used here as the reference price.",
+    roeS: "16", payS: "50", N: 3,
+    years: [{ roe: "25", pay: "20" }, { roe: "25", pay: "20" }, { roe: "16", pay: "50" }],
+    sens: { stepR: "1", stepG: "1", minSpread: "0.5", mode: "auto" },
+    scen: { bear: { dr: "1", dg: "-1", droe: "-2" }, bull: { dr: "-0.5", dg: "0", droe: "1" } },
+    heatMode: "value"
+  }),
+  custom: () => ({
+    preset: "custom", name: "", ticker: "", sector: "", country: "", ccy: "USD", date: "2026-11-18", price: "", shares: "",
+    desc: "", BE0: "", epsH: "", dpsH: "", gH: "", roeH: "", payH: "", capm: { rf: "", beta: "", erp: "" }, r: "", rNote: "", roeS: "", payS: "", N: 5,
+    years: Array.from({ length: 5 }, () => ({ roe: "", pay: "" })),
+    sens: { stepR: "1", stepG: "1", minSpread: "0.5", mode: "auto" },
+    scen: { bear: { dr: "1", dg: "-1", droe: "-2" }, bull: { dr: "-0.5", dg: "0", droe: "1" } },
+    heatMode: "value"
+  })
+};
+
+function num(v) { if (v === null || v === undefined || v === "") return null; const x = Number(v); return Number.isFinite(x) ? x : null; }
+
+/* Single DDM engine.
+   Stable-growth year (N+1) is built from fundamentals: EPS = ROE_s x BE_(N+1), D = payout_s x EPS, g = ROE_s x (1 - payout_s).
+   ov = optional overrides: r (decimal); droe (pp added to every explicit ROE and the stable ROE);
+        g (decimal target growth): delivered through the stable payout, p_s = 1 - g / ROE_s, holding stable ROE. */
+function runModel(S, ov) {
+  ov = ov || {};
+  const errors = [], warns = [];
+  const N = Number(S.N);
+  const BE0 = num(S.BE0), price = num(S.price), D0 = num(S.dpsH), EPS0 = num(S.epsH);
+  const r = ov.r !== undefined ? ov.r : (num(S.r) === null ? null : num(S.r) / 100);
+  const droe = (ov.droe || 0) / 100;
+  const roeS0 = num(S.roeS), payS0 = num(S.payS);
+  const roeS = roeS0 === null ? null : roeS0 / 100 + droe;
+  let payS = payS0 === null ? null : payS0 / 100;
+  if (ov.g !== undefined && roeS !== null && roeS > 0) payS = 1 - ov.g / roeS;
+  const g = (roeS !== null && payS !== null) ? roeS * (1 - payS) : null;
+  const res = { errors, warns, N, price, D0, EPS0, r, g, roeS, payS, forecastOK: false, valid: false, rows: [], reconciled: null, gImp: null };
+
+  if (!(Number.isInteger(N) && N >= 3 && N <= 10)) errors.push("Forecast horizon must be between 3 and 10 years.");
+  if (BE0 === null || BE0 <= 0) errors.push("Beginning book equity per share must be entered and positive.");
+  if (r === null || r <= 0) errors.push("Required rate of return (r) must be entered and positive.");
+  if (price === null || price <= 0) warns.push("Current market price is missing or not positive: upside/downside, market P/E and dividend yields are not shown.");
+
+  // stable-growth inputs
+  if (roeS === null) errors.push("Stable-growth ROE must be entered (it determines terminal growth g = ROE × (1 − payout)).");
+  else if (roeS <= 0) errors.push("Stable-growth ROE must be positive: a firm with non-positive ROE cannot sustain dividend growth.");
+  if (payS === null) errors.push("Stable-growth payout ratio must be entered.");
+  else if (payS < -1e-9 || payS > 1 + 1e-9) errors.push(`Stable-growth payout ratio must be between 0% and 100% (currently ${(payS * 100).toFixed(1)}%).`);
+  else if (payS <= 1e-9) errors.push("Stable-growth payout must be above 0%: a dividend discount model needs a dividend in the stable period.");
+
+  // explicit period inputs
+  let yearsOK = Number.isInteger(N) && N >= 3 && N <= 10;
+  const yrs = [];
+  if (yearsOK) for (let i = 0; i < N; i++) {
+    const y = (S.years && S.years[i]) || {};
+    const roe = num(y.roe), pay = num(y.pay);
+    if (roe === null) { errors.push(`Year ${i + 1}: ROE is missing or not a number.`); yearsOK = false; }
+    if (pay === null) { errors.push(`Year ${i + 1}: payout ratio is missing or not a number.`); yearsOK = false; }
+    else if (pay < 0 || pay > 100) { errors.push(`Year ${i + 1}: payout ratio must be between 0% and 100%.`); yearsOK = false; }
+    yrs.push({ roe: roe === null ? null : roe / 100 + droe, pay: pay === null ? null : pay / 100 });
+  }
+
+  const baseOK = BE0 !== null && BE0 > 0 && yearsOK;
+  if (baseOK) {
+    let be = BE0, prevD = (D0 !== null && D0 > 0) ? D0 : null;
+    for (let t = 1; t <= N; t++) {
+      const y = yrs[t - 1];
+      const eps = y.roe * be, dps = eps * y.pay, end = be + eps - dps;
+      const gr = prevD !== null && prevD > 0 ? dps / prevD - 1 : null;
+      res.rows.push({ t, beg: be, roe: y.roe, eps, pay: y.pay, plow: 1 - y.pay, dps, end, gr, sust: y.roe * (1 - y.pay) });
+      if (dps < -1e-12) errors.push(`Year ${t}: dividend per share would be negative (${dps.toFixed(2)}) because ROE is negative while payout is positive. Dividends cannot be negative: set the payout to 0% or revise ROE.`);
+      if (end <= 0) errors.push(`Year ${t}: ending book equity per share is not positive (${end.toFixed(2)}), so the forecast is not meaningful.`);
+      be = end; prevD = dps;
+    }
+    res.forecastOK = true;
+    for (const w of res.rows) {
+      if (w.roe < 0 && w.pay === 0) warns.push(`Year ${w.t}: ROE is negative (${(w.roe * 100).toFixed(1)}%); dividend is zero but book equity is shrinking.`);
+      if (w.roe > 0.40) warns.push(`Year ${w.t}: ROE of ${(w.roe * 100).toFixed(1)}% is very high and unlikely to persist (Lecture 4, slide 42).`);
+      if (w.eps <= 0 && w.roe >= 0) warns.push(`Year ${w.t}: EPS is not positive.`);
+    }
+    if (res.rows.every(w => w.pay === 0)) warns.push("Payout is 0% in every explicit year: the explicit period adds no dividends, so value comes only from the stable-growth year.");
+
+    // stable-growth year N+1 built from fundamentals
+    if (roeS !== null && payS !== null) {
+      const L = res.rows[N - 1];
+      const epsS = roeS * L.end, dS = epsS * payS, endS = L.end + epsS - dS;
+      const gImp = L.dps > 1e-12 ? dS / L.dps - 1 : null;
+      res.term = { t: N + 1, beg: L.end, roe: roeS, eps: epsS, pay: payS, plow: 1 - payS, dps: dS, end: endS, gr: gImp, sust: g };
+      res.gImp = gImp;
+      if (gImp === null) warns.push(`Year ${N} dividend is zero, so the transition into the stable year cannot be checked against g.`);
+      else {
+        res.reconciled = Math.abs(gImp - g) <= 0.005;
+        if (!res.reconciled) warns.push(`Does not reconcile: dividends grow ${(gImp * 100).toFixed(1)}% into the stable year (year ${N} to ${N + 1}), but stable growth is g = ROE × (1 − payout) = ${(g * 100).toFixed(2)}%. The explicit period does not transition smoothly: align the year-${N} ROE and payout with the stable inputs, or extend the horizon.`);
+      }
+    }
+  }
+
+  if (r !== null && g !== null && r <= g) errors.push(`Terminal growth g = ROE × (1 − payout) = ${(g * 100).toFixed(2)}% must be lower than the required return r = ${(r * 100).toFixed(2)}%. The Gordon formula is invalid, so the valuation is blocked.`);
+  if (g !== null && g > 0.06) warns.push(`Terminal growth of ${(g * 100).toFixed(2)}% is high for a perpetual rate.`);
+  if (roeS !== null && roeS > 0.25) warns.push(`Stable ROE of ${(roeS * 100).toFixed(1)}% is very high to sustain forever (Lecture 4, slide 42).`);
+  if (roeS !== null && r !== null && roeS > 0 && roeS < r) warns.push(`Stable ROE (${(roeS * 100).toFixed(1)}%) is below the required return (${(r * 100).toFixed(1)}%): in the stable state growth destroys value.`);
+  if (r !== null && g !== null && r > g && r - g < 0.01) warns.push(`The spread r − g is only ${((r - g) * 100).toFixed(2)}%: terminal value is extremely sensitive to the inputs.`);
+
+  if (errors.length === 0 && res.forecastOK && res.term && r !== null && g !== null) {
+    res.valid = true;
+    let sum = 0;
+    for (const w of res.rows) { w.df = 1 / Math.pow(1 + r, w.t); w.pv = w.dps * w.df; sum += w.pv; }
+    res.pvExplicit = sum;
+    res.TV = res.term.dps / (r - g);
+    res.dfN = 1 / Math.pow(1 + r, N);   // terminal value is at the end of year N: discount by N periods
+    res.pvTV = res.TV * res.dfN;
+    res.V = sum + res.pvTV;
+    res.tvPct = res.pvTV / res.V; res.explPct = sum / res.V;
+    res.spread = r - g;
+    const eps1 = res.rows[0].eps, d1 = res.rows[0].dps;
+    res.noGrowth = eps1 > 0 ? eps1 / r : null;
+    res.pvgo = res.noGrowth !== null ? res.V - res.noGrowth : null;
+    res.impliedPE = eps1 > 0 ? res.V / eps1 : null;
+    res.marketPE = (price > 0 && eps1 > 0) ? price / eps1 : null;
+    res.dy0 = (price > 0 && D0 > 0) ? D0 / price : null;
+    res.dy1 = (price > 0) ? d1 / price : null;
+    res.upside = price > 0 ? res.V / price - 1 : null;
+    if (res.tvPct > 0.75) warns.push(`Terminal value is ${(res.tvPct * 100).toFixed(0)}% of intrinsic value: the valuation relies heavily on the stable-growth assumption.`);
+    // Normalised comparator: what the existing asset base earns at the stable ROE, ignoring year-1 spikes
+    res.epsNorm = roeS * BE0;
+    res.noGrowthNorm = res.epsNorm / r;
+    res.pvgoNorm = res.V - res.noGrowthNorm;
+    res.pvgoFlag = null;
+    if (res.pvgo !== null) {
+      if (res.pvgo < 0 && res.pvgoNorm >= 0) {
+        res.pvgoFlag = "eps1";
+        warns.push(`PVGO is negative because EPS₁ (${eps1.toFixed(2)}) is far above the normalised earnings of the existing assets (${res.epsNorm.toFixed(2)} = stable ROE × BE₀), so EPS₁ / r overstates the no-growth value. On normalised EPS the PVGO is ${res.pvgoNorm.toFixed(2)}.`);
+      } else if (res.pvgo < 0) {
+        res.pvgoFlag = "neg";
+        warns.push("PVGO is negative: the DDM value is below the no-growth price (growth destroys value, or inputs are inconsistent).");
+      } else if (eps1 > 2 * res.epsNorm) {
+        res.pvgoFlag = "spike";
+        warns.push(`EPS₁ (${eps1.toFixed(2)}) is more than twice the normalised EPS (${res.epsNorm.toFixed(2)} = stable ROE × BE₀), so PVGO based on EPS₁ may be distorted. On normalised EPS the PVGO is ${res.pvgoNorm.toFixed(2)}.`);
+      }
+    }
+  }
+  return res;
+}
+
+/* Sensitivity grid. Terminal g is varied by changing the stable payout (p_s = 1 - g/ROE_s), holding stable ROE.
+   mode "auto": the r and g steps are scaled down (never up) so that every cell keeps r - g >= minSpread and a valid
+   stable payout, so no cells are skipped. mode "manual": steps are used exactly as entered (cells may be invalid). */
+function buildGrid(S, stepR, stepG, opts) {
+  opts = opts || {};
+  const base = runModel(S, {});
+  const r0 = base.r, g0 = base.g;
+  const reqR = (num(stepR) ?? 1) / 100, reqG = (num(stepG) ?? 1) / 100;
+  let sr = reqR, sg = reqG, scaled = false;
+  const minS = Math.min((num(opts.minSpread) ?? 0.5) / 100, (r0 - g0) / 2);
+  if ((opts.mode || "auto") === "auto" && base.valid) {
+    let k = 1;
+    const tot = sr + sg;
+    if (tot > 0) k = Math.min(k, (r0 - g0 - minS) / (2 * tot));
+    if (sg > 0) {
+      k = Math.min(k, (0.95 * base.roeS - g0) / (2 * sg));   // keep implied stable payout >= 5%
+      if (g0 > 0) k = Math.min(k, g0 / (2 * sg));              // keep g >= 0
+    }
+    k = Math.max(k, 0.01);
+    if (k < 0.999) {
+      const fl = x => { const v = x * k, q = v >= 0.0005 ? 0.0005 : 0.0001; return Math.max(0.0001, Math.floor(v / q + 1e-9) * q); };   // round down to 0.05 pp (0.01 pp for very thin spreads)
+      sr = fl(sr); sg = fl(sg); scaled = true;
+    }
+  }
+  const rs = [-2, -1, 0, 1, 2].map(k => r0 + k * sr), gs = [-2, -1, 0, 1, 2].map(k => g0 + k * sg);
+  const cells = rs.map(r => gs.map(g => {
+    if (r <= 0 || r <= g || g < 0) return { r, g, V: null, invalid: true };
+    const m = runModel(S, { r, g });
+    return { r, g, V: m.valid ? m.V : null, invalid: !m.valid };
+  }));
+  return { rs, gs, cells, sr, sg, reqR, reqG, scaled, minSpread: minS, mode: opts.mode || "auto" };
+}
+
+function buildScenarios(S) {
+  const p = k => ({ dr: (num(S.scen[k].dr) ?? 0), dg: (num(S.scen[k].dg) ?? 0), droe: (num(S.scen[k].droe) ?? 0) });
+  const base = runModel(S, {});
+  const mk = k => {
+    const q = p(k);
+    const r = base.r === null ? null : base.r + q.dr / 100, g = base.g === null ? null : base.g + q.dg / 100;
+    const m = runModel(S, { r, g, droe: q.droe });
+    return { ...q, r, g, res: m };
+  };
+  return { bear: mk("bear"), base: { dr: 0, dg: 0, droe: 0, r: base.r, g: base.g, res: base }, bull: mk("bull") };
+}
+
+function impliedR(S) {
+  const base = runModel(S, {});
+  if (!base.valid || !(base.price > 0)) return null;
+  let lo = base.g + 1e-5, hi = 1.0;
+  const f = r => { const m = runModel(S, { r }); return m.valid ? m.V - base.price : NaN; };
+  const flo = f(lo), fhi = f(hi);
+  if (!isFinite(flo) || !isFinite(fhi) || flo < 0 || fhi > 0) return null;
+  for (let i = 0; i < 80; i++) { const mid = (lo + hi) / 2; if (f(mid) > 0) lo = mid; else hi = mid; }
+  return (lo + hi) / 2;
+}
+
+function buildBundle(S) {
+  const res = runModel(S, {});
+  const bundle = { res, scen: null, grid: null, impR: null };
+  if (res.valid) {
+    bundle.scen = buildScenarios(S);
+    bundle.grid = buildGrid(S, S.sens.stepR, S.sens.stepG, { mode: S.sens.mode, minSpread: S.sens.minSpread });
+    bundle.impR = impliedR(S);
+  }
+  return bundle;
+}
+/*ENGINE_END*/
+
+
+/* ============================ UI ============================ */
+const $ = s => document.querySelector(s);
+const clone = o => JSON.parse(JSON.stringify(o));
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const SYM = { USD: "$", GBP: "£", EUR: "€", CHF: "CHF ", JPY: "¥", CAD: "C$", AUD: "A$", HKD: "HK$" };
+let S = PRESETS.lecture(), M = null, tab = "dash", noteOn = false;
+
+const cur = (v, d = 2) => (v === null || v === undefined || !isFinite(v)) ? "n/a" : (v < 0 ? "−" : "") + (SYM[S.ccy] || "") + Math.abs(v).toLocaleString("en-GB", { minimumFractionDigits: d, maximumFractionDigits: d });
+const pct = (v, d = 1) => (v === null || v === undefined || !isFinite(v)) ? "n/a" : (v * 100).toFixed(d) + "%";
+const spct = (v, d = 1) => (v === null || v === undefined || !isFinite(v)) ? "n/a" : (v >= 0 ? "+" : "−") + Math.abs(v * 100).toFixed(d) + "%";
+const mult = v => (v === null || v === undefined || !isFinite(v)) ? "n/a" : v.toFixed(1) + "x";
+const tip = t => `<i class="tip" tabindex="0" data-tip="${esc(t)}">i</i>`;
+const cls = v => v === null ? "" : (v >= 0 ? "pos" : "neg");
+
+function getPath(p) { return p.split(".").reduce((o, k) => o?.[k], S); }
+function setPath(p, v) { const ks = p.split("."); const last = ks.pop(); ks.reduce((o, k) => o[k], S)[last] = v; }
+
+/* ---------- Static builders (inputs & controls) ---------- */
+function F(label, k, o = {}) {
+  const v = getPath(k);
+  const input = o.area ? `<textarea class="in" data-k="${k}" placeholder="${esc(o.ph || "")}">${esc(v)}</textarea>`
+    : o.sel ? `<select class="in" data-k="${k}">${o.sel.map(x => `<option ${x === v ? "selected" : ""}>${x}</option>`).join("")}</select>`
+    : `<input class="in" data-k="${k}" type="${o.type || "number"}" ${o.type ? "" : 'step="any"'} value="${esc(v)}" placeholder="${esc(o.ph || "")}">`;
+  return `<label class="fld"><span>${label}${o.req ? '<b class="req">*</b>' : ""}${o.tip ? tip(o.tip) : ""}</span><div class="inwrap">${input}${o.unit ? `<em>${o.unit}</em>` : ""}</div></label>`;
+}
+
+function buildInputs() {
+  const N = Number(S.N);
+  const hdr = `<tr><th>Assumption</th>${Array.from({ length: N }, (_, i) => `<th>Year ${i + 1}</th>`).join("")}<th class="tv">Stable (N+1)${tip("Stable-growth year with its own ROE and payout. Dividend D_{N+1} = payout × ROE × opening book equity, and terminal growth g = ROE × (1 − payout).")}</th></tr>`;
+  const val = (i, f) => { const y = S.years[i] || {}; if (f === "plow") return (y.pay === "" || y.pay === undefined) ? "" : +(100 - Number(y.pay)).toFixed(6); return y[f] === undefined ? "" : y[f]; };
+  const rowIn = (lab, f, t, st) => `<tr><td>${lab}${tip(t)}</td>${Array.from({ length: N }, (_, i) => `<td><input class="in" type="number" step="any" data-yr="${i}" data-f="${f}" value="${esc(val(i, f))}"></td>`).join("")}<td class="tv">${st}</td></tr>`;
+  const stIn = (attr, v) => `<input class="in" type="number" step="any" ${attr} value="${esc(v)}">`;
+  const plowS = (S.payS === "" || S.payS === undefined) ? "" : +(100 - Number(S.payS)).toFixed(6);
+  $("#v-inputs").innerHTML = `
+  <div class="toolbar">
+    <button class="btn primary" data-act="lecture">Load Lecture Example</button>
+    <button class="btn" data-act="reset">Reset Inputs</button>
+    <button class="btn" data-act="custom">Load Custom Company</button>
+    <span class="note-small">Reset restores the loaded template (${S.preset === "lecture" ? "Growth-Tech" : "blank custom company"}).</span>
+    <span class="keyl"><span><i class="sw swin"></i>Input / assumption (edit)</span><span><i class="sw calc"></i>Calculated (read-only)</span></span>
+  </div>
+  <div class="apanel fillp cmp">
+   <div class="phead inh">Assumptions &amp; inputs<span>amber fields are yours to edit · <b>*</b> required for a valuation</span></div>
+   <div class="pbody">
+    <div class="igrid">
+     <div class="isec"><h4>A. Company information</h4>
+      <div class="g2c">
+       ${F("Company name", "name", { type: "text" })}${F("Ticker symbol", "ticker", { type: "text" })}
+       ${F("Industry / sector", "sector", { type: "text" })}${F("Country", "country", { type: "text" })}
+       ${F("Currency", "ccy", { sel: Object.keys(SYM) })}${F("Valuation date", "date", { type: "date" })}
+       ${F("Current market price", "price", { req: true, tip: "Observed price today, entered once here. Used for upside/downside, market P/E and yields. No live data is used." })}
+       ${F("Shares outstanding (m)", "shares", { tip: "Optional, in millions. Only used for equity market capitalisation." })}
+      </div>
+      ${F("Business description (optional, shown in note)", "desc", { area: true, ph: "If empty, the note states none was provided." })}
+     </div>
+     <div class="isec"><h4>B. Historical financials (reference)</h4>
+      <div class="g2c">
+       ${F("Book equity per share, BE₀", "BE0", { req: true, tip: "Beginning book equity for the forecast: BE₁ = this value (Lecture 4, slide 39)." })}
+       ${F("Historical EPS", "epsH", { tip: "Most recent earnings per share (optional)." })}
+       ${F("Historical DPS, D₀", "dpsH", { tip: "Most recent annual dividend. Used for trailing yield D₀/P₀ (slide 34) and year-1 growth." })}
+       ${F("Dividend growth", "gH", { unit: "%", tip: "Historical average growth (slide 29). Reference only." })}
+       ${F("Historical ROE", "roeH", { unit: "%", tip: "Net income / book equity (slide 30). Reference only." })}
+       ${F("Historical payout", "payH", { unit: "%", tip: "Dividends / net income (slide 30). Reference only." })}
+      </div>
+      <div id="histHints" class="note-small"></div>
+     </div>
+     <div class="isec"><h4>C. Valuation assumptions</h4>
+      <div class="g2c">
+       ${F("Required return, r", "r", { req: true, unit: "%", tip: "Risk-adjusted discount rate = the stock’s expected return (slide 22). Lecture 4 infers it from a comparable firm facing the same risks (slide 44)." })}
+       <div class="fld"><span>Terminal growth g (calculated)${tip("g = stable ROE × (1 − stable payout), set in section D. It is derived, never typed in, and must be below r.")}</span><div class="calcbox" id="gCalc">–</div></div>
+      </div>
+      <div class="capm"><div class="ch">CAPM helper (optional): r = risk-free + β × equity risk premium (ERP)${tip("Fills in r when you type the three inputs (Lecture 6, CAPM). r stays editable: type over it any time. Use the button to re-apply the CAPM value after a manual change.")}</div>
+       <div class="cr">
+        <label class="fld">Risk-free (%)<input class="in" type="number" step="any" data-k="capm.rf" value="${esc(S.capm.rf)}"></label>
+        <label class="fld">Beta<input class="in" type="number" step="any" data-k="capm.beta" value="${esc(S.capm.beta)}"></label>
+        <label class="fld">ERP (%)<input class="in" type="number" step="any" data-k="capm.erp" value="${esc(S.capm.erp)}"></label>
+        <span class="cout" id="capmOut">–</span><button class="btn sm" data-act="applyCapm" id="capmBtn" style="display:none">Use as r</button>
+       </div><div class="cnote" id="capmNote"></div></div>
+      ${F("Source of discount rate (optional)", "rNote", { area: true, ph: "e.g. required return of comparable companies" })}
+      <div id="inputPreview"></div>
+     </div>
+    </div>
+    <div class="isec" style="margin-top:10px"><h4>D. Forecast assumptions: explicit years (each independent) and the stable-growth year N+1</h4>
+     <div class="row" style="margin-bottom:6px"><label class="fld" style="margin:0;flex-direction:row;align-items:center;gap:8px">Horizon N${tip("Number of explicit forecast years, 3 to 10. Terminal value is placed at the end of year N.")}
+       <select class="in" data-k="N" style="width:100px">${[3, 4, 5, 6, 7, 8, 9, 10].map(n => `<option value="${n}" ${n === N ? "selected" : ""}>${n} years</option>`).join("")}</select></label>
+       <span class="note-small">Plowback and payout are linked (editing one updates the other). New years copy the last year. Percent values: 25 means 25%.</span></div>
+     <div class="scroll"><table class="t cp">${hdr}
+       ${rowIn("ROE (%)", "roe", "EPS_t / beginning book equity (slide 30).", stIn('data-k="roeS"', S.roeS))}
+       ${rowIn("Payout ratio (%)", "pay", "Dividends / earnings. Must be between 0% and 100%. In the stable year it must be above 0%.", stIn('data-k="payS"', S.payS))}
+       ${rowIn("Plowback ratio (%)", "plow", "1 − payout: share of earnings retained.", stIn('data-st="plow"', plowS))}
+       <tr><td>Growth ROE × (1 − payout), calculated${tip("Growth each column would sustain if ROE and payout stayed constant. In the stable column it is the terminal growth rate g used in the valuation.")}</td>${Array.from({ length: N }, (_, i) => `<td class="c" data-gy="${i}"></td>`).join("")}<td class="c tv" data-gy="S"></td></tr>
+     </table></div>
+    </div>
+   </div>
+  </div>`;
+}
+
+function buildSensCtl() {
+  const sc = (k, lab) => `<tr><td>${lab}</td>
+    <td><input class="in" type="number" step="any" data-k="scen.${k}.dr" value="${esc(S.scen[k].dr)}"></td>
+    <td><input class="in" type="number" step="any" data-k="scen.${k}.dg" value="${esc(S.scen[k].dg)}"></td>
+    <td><input class="in" type="number" step="any" data-k="scen.${k}.droe" value="${esc(S.scen[k].droe)}"></td></tr>`;
+  $("#sensCtl").innerHTML = `<div class="apanel cmp" style="flex:none"><div class="phead inh">Assumptions: sensitivity grid &amp; scenario shifts<span>your inputs · centred on your r and derived g · g moves via stable payout</span></div>
+   <div class="pbody" style="overflow:visible"><div class="row" style="align-items:flex-start;gap:28px;margin:0">
+     <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <label class="fld">r step, max (pp)<input class="in" type="number" step="any" data-k="sens.stepR" value="${esc(S.sens.stepR)}" style="width:90px"></label>
+      <label class="fld">g step, max (pp)<input class="in" type="number" step="any" data-k="sens.stepG" value="${esc(S.sens.stepG)}" style="width:90px"></label>
+      <label class="fld">Min r − g (pp)<input class="in" type="number" step="any" data-k="sens.minSpread" value="${esc(S.sens.minSpread)}" style="width:90px"></label>
+      <label class="fld">Grid steps<select class="in" data-k="sens.mode" style="width:130px"><option value="auto" ${S.sens.mode !== "manual" ? "selected" : ""}>Auto-fit</option><option value="manual" ${S.sens.mode === "manual" ? "selected" : ""}>As entered</option></select></label>
+      <label class="fld">Cell display<select class="in" data-k="heatMode" style="width:150px"><option value="value" ${S.heatMode === "value" ? "selected" : ""}>Value per share</option><option value="upside" ${S.heatMode === "upside" ? "selected" : ""}>Upside vs market</option></select></label>
+     </div>
+     <table class="t cp" style="width:auto"><tr><th>Scenario shift vs base</th><th>Δ r (pp)</th><th>Δ g (pp)</th><th>Δ ROE, all years (pp)</th></tr>${sc("bear", "Bear case")}${sc("bull", "Bull case")}</table>
+   </div></div></div>`;
+}
+
+function buildStatic() { buildInputs(); buildDashAssump(); buildSensCtl(); buildNoteCtl(); }
+
+/* ---------- SVG charts ---------- */
+const COL = { blue: "#5aa2ff", teal: "#38c9b0", amber: "#f2b640", pos: "#35d39a", neg: "#ff6372", violet: "#a78bfa" };
+function barChart(labels, vals, o) {
+  const W = o.c ? 380 : 640, H = o.c ? 190 : 250, L = o.c ? 40 : 52, R = 10, T = o.c ? 16 : 20, B = o.c ? 26 : 34, iw = W - L - R, ih = H - T - B;
+  const mx = (Math.max(0, ...vals) * 1.15) || 1, mn = Math.min(0, ...vals) * 1.15;
+  const y = v => T + (mx - v) / (mx - mn) * ih;
+  let s = `<svg viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="${esc(o.title)}">`;
+  for (let i = 0; i <= 4; i++) { const v = mn + (mx - mn) * i / 4, yy = y(v); s += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" class="grid"/><text x="${L - 6}" y="${yy + 4}" class="ax" text-anchor="end">${o.ax(v)}</text>`; }
+  const bw = iw / vals.length;
+  vals.forEach((v, i) => {
+    const x = L + i * bw + bw * .2, w = bw * .6, y0 = y(0), y1 = y(v), term = o.termLast && i === vals.length - 1;
+    s += `<rect x="${x}" y="${Math.min(y0, y1)}" width="${w}" height="${Math.max(1, Math.abs(y1 - y0))}" fill="${o.color}" fill-opacity="${term ? .35 : 1}" ${term ? `stroke="${o.color}" stroke-dasharray="4 3"` : ""}><title>${labels[i]}: ${o.fmt(v)}</title></rect>`;
+    s += `<text x="${x + w / 2}" y="${v >= 0 ? y1 - 5 : y1 + 13}" text-anchor="middle" class="vl">${o.fmt(v)}</text>`;
+    s += `<text x="${x + w / 2}" y="${H - 12}" text-anchor="middle" class="ax">${labels[i]}</text>`;
+  });
+  return s + "</svg>";
+}
+function lineChart(labels, series, c) {
+  const W = c ? 380 : 640, H = c ? 190 : 250, L = 40, R = 14, T = 26, B = c ? 26 : 34, iw = W - L - R, ih = H - T - B;
+  const mx = Math.max(.05, ...series.flatMap(s => s.vals)) * 1.15, mn = Math.min(0, ...series.flatMap(s => s.vals));
+  const y = v => T + (mx - v) / (mx - mn) * ih, x = i => L + (i + .5) * iw / labels.length;
+  let s = `<svg viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="ROE and payout ratio">`;
+  for (let i = 0; i <= 4; i++) { const v = mn + (mx - mn) * i / 4, yy = y(v); s += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" class="grid"/><text x="${L - 6}" y="${yy + 4}" class="ax" text-anchor="end">${pct(v, 0)}</text>`; }
+  labels.forEach((lb, i) => s += `<text x="${x(i)}" y="${H - 12}" text-anchor="middle" class="ax">${lb}</text>`);
+  series.forEach((se, k) => {
+    s += `<polyline fill="none" stroke="${se.color}" stroke-width="2.5" points="${se.vals.map((v, i) => `${x(i)},${y(v)}`).join(" ")}"/>`;
+    se.vals.forEach((v, i) => s += `<circle cx="${x(i)}" cy="${y(v)}" r="3.5" fill="${se.color}"><title>${se.name} ${labels[i]}: ${pct(v)}</title></circle><text x="${x(i)}" y="${y(v) + (k ? 15 : -8)}" text-anchor="middle" class="vl">${pct(v, 0)}</text>`);
+    s += `<rect x="${L + k * 120}" y="6" width="10" height="10" fill="${se.color}"/><text x="${L + k * 120 + 15}" y="15" class="lg">${se.name}</text>`;
+  });
+  return s + "</svg>";
+}
+function donut(parts, c) {
+  const R = 70, C = 2 * Math.PI * R; let off = 0;
+  let s = `<svg viewBox="0 0 180 180" class="donut" role="img" aria-label="Valuation composition"><g transform="rotate(-90 90 90)">`;
+  parts.forEach(p => { const len = Math.max(0, p.frac) * C; s += `<circle cx="90" cy="90" r="${R}" fill="none" stroke="${p.color}" stroke-width="26" stroke-dasharray="${len} ${C - len}" stroke-dashoffset="${-off}"><title>${p.label}: ${pct(p.frac)}</title></circle>`; off += len; });
+  s += `</g><text x="90" y="86" text-anchor="middle" class="vl" style="font-size:12px">Intrinsic</text><text x="90" y="104" text-anchor="middle" class="vl" style="font-size:16px">${cur(M.res.V)}</text></svg>`;
+  return `<div class="donutwrap">${s}<div class="leg">${parts.map(p => `<div><i class="sw" style="background:${p.color}"></i>${p.label}: <b>${cur(p.val)}</b> (${pct(p.frac)})</div>`).join("")}</div></div>`;
+}
+function scenChart(c, pal) {
+  const mk = (pal && pal.mkt) || COL.amber;
+  const sc = M.scen, price = M.res.price, keys = ["bear", "base", "bull"], vals = keys.map(k => sc[k].res.valid ? sc[k].res.V : 0);
+  const W = c ? 380 : 640, H = c ? 190 : 250, L = c ? 44 : 52, R = 10, T = c ? 16 : 20, B = c ? 26 : 34, iw = W - L - R, ih = H - T - B;
+  const mx = Math.max(...vals, price > 0 ? price : 0) * 1.18 || 1, y = v => T + (mx - v) / mx * ih;
+  let s = `<svg viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="Bear base bull comparison">`;
+  for (let i = 0; i <= 4; i++) { const v = mx * i / 4, yy = y(v); s += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" class="grid"/><text x="${L - 6}" y="${yy + 4}" class="ax" text-anchor="end">${cur(v, 0)}</text>`; }
+  const bw = iw / 3, colr = { bear: (pal && pal.bear) || COL.neg, base: (pal && pal.base) || COL.blue, bull: (pal && pal.bull) || COL.pos };
+  keys.forEach((k, i) => {
+    const v = vals[i], x = L + i * bw + bw * .25, w = bw * .5;
+    s += `<rect x="${x}" y="${y(v)}" width="${w}" height="${Math.max(1, y(0) - y(v))}" fill="${colr[k]}"><title>${k}: ${sc[k].res.valid ? cur(v) : "invalid"}</title></rect>`;
+    s += `<text x="${x + w / 2}" y="${y(v) - 5}" text-anchor="middle" class="vl">${sc[k].res.valid ? cur(v) : "invalid"}</text><text x="${x + w / 2}" y="${H - 12}" text-anchor="middle" class="ax">${k[0].toUpperCase() + k.slice(1)}</text>`;
+  });
+  if (price > 0) s += `<line x1="${L}" x2="${W - R}" y1="${y(price)}" y2="${y(price)}" style="stroke:${mk}" stroke-dasharray="6 4" stroke-width="2"/><text x="${L + 6}" y="${y(price) - 5}" text-anchor="start" class="lg" style="fill:${mk}">Market ${cur(price)}</text>`;
+  return s + "</svg>";
+}
+
+/* ---------- Views ---------- */
+const lab = t => `Y${t}`;
+const DC = { dps: "#38c9b0", eps: "#a78bfa", roe: "#a78bfa", pay: "#38c9b0", exp: "#38c9b0", tv: "#8d9cb8", bear: COL.neg, base: "#8d9cb8", bull: COL.pos, mkt: "var(--text)" };
+function blocked() {
+  return `<div class="card"><h3>Valuation not available</h3><p>The model cannot produce a valuation until the issues listed above are resolved. Open <b>Company Inputs &amp; Assumptions</b> to fix them. No figure is shown rather than a misleading one.</p></div>`;
+}
+const astrip = chips => `<div class="astrip"><b>Inputs feeding this page</b>${chips.map(c => `<span>${c[0]}<em>${c[1]}</em></span>`).join("")}<button class="btn sm" data-tab="inputs">Edit inputs</button></div>`;
+const opanel = (title, sub, body) => `<div class="opanel fillp"><div class="phead outh">${title}<span>${sub}</span></div><div class="obody">${body}</div></div>`;
+const ccard = (title, body, extra) => `<div class="ccard ${extra || ""}"><h3>${title}</h3><div class="cbody">${body}</div></div>`;
+
+function benchStats() {
+  if (S.preset !== "lecture" || !M.res.valid) return null;
+  const r = M.res, cols = [...r.rows.slice(0, 3), ...(Number(S.N) === 3 && r.term ? [{ beg: r.term.beg, eps: r.term.eps, dps: r.term.dps, gr: r.term.gr }] : [])];
+  let m = 0, tot = 0;
+  cols.forEach((w, i) => { [["beg", LEC.BE], ["eps", LEC.EPS], ["dps", LEC.DPS]].forEach(([k, a]) => { tot++; if (Math.abs(w[k] - a[i]) <= 0.0111) m++; }); if (LEC.G[i] !== null) { tot++; if (Math.abs((w.gr ?? 0) - LEC.G[i]) <= 0.0111) m++; } });
+  return { m, tot, ok: lecUnmodified() };
+}
+const dF = (label, k, unit) => `<label class="mf"><span>${label}${unit ? " (" + unit + ")" : ""}</span><input class="in" type="number" step="any" data-k="${k}" value="${esc(getPath(k))}"></label>`;
+function buildDashAssump() {
+  $("#dashAssump").innerHTML = `<div class="phead inh">Assumptions<span>your inputs</span></div>
+  <div class="pbody">
+   <div class="note-small" style="margin-bottom:6px">Amber = inputs. Edit price, r or the stable ROE and payout here; every output updates.</div>
+   ${dF("Market price", "price")}${dF("Required return r", "r", "%")}${dF("Stable ROE", "roeS", "%")}${dF("Stable payout", "payS", "%")}
+   <div id="dashYears"></div></div>`;
+}
+function renderDashAssump() {
+  const N = Number(S.N), v = x => (x === "" || x === undefined) ? "–" : x;
+  $("#dashYears").innerHTML = `
+   <div class="mf ro"><span>Terminal g (calculated)</span><b style="color:var(--text)">${M.res.g === null ? "–" : pct(M.res.g, 2)}</b></div>
+   <div class="mf ro"><span>Horizon N</span><b>${N} years</b></div>
+   <div class="mf ro"><span>Book equity BE₀</span><b>${S.BE0 === "" ? "–" : cur(num(S.BE0))}</b></div>
+   <div class="mf ro"><span>Last dividend D₀</span><b>${S.dpsH === "" ? "–" : cur(num(S.dpsH))}</b></div>
+   <table class="mini"><tr><th>Year</th><th>ROE %</th><th>Payout %</th></tr>${S.years.slice(0, N).map((y, i) => `<tr><td>${i + 1}</td><td>${v(y.roe)}</td><td>${v(y.pay)}</td></tr>`).join("")}</table>
+   <button class="btn sm" data-tab="inputs" style="width:100%">Edit all assumptions</button>`;
+}
+function renderDash() {
+  const r = M.res, el = $("#dashOut");
+  const head = `<div class="phead outh">Model outputs<span>calculated, read-only · ${esc(S.name || "Unnamed company")} · ${esc(S.date)}</span></div>`;
+  if (!r.valid) { el.innerHTML = head + `<div class="obody">${blocked()}</div>`; return; }
+  const up = r.upside, imp = M.impR, bs = benchStats(), N = r.N;
+  const upCls = up === null ? "" : up >= 0 ? "up" : "dn";
+  const cell = (l, v, s2, tp) => `<div class="hk"><div class="hl">${l}${tp ? tip(tp) : ""}</div><div class="hv">${v}</div><div class="hs">${s2 || "&nbsp;"}</div></div>`;
+  const cap = num(S.shares) > 0 && r.price > 0 ? `${cur(num(S.shares) * r.price, 0)}m market cap` : "input";
+  const xc = `
+   <div class="xl">Identity: no-growth ${cur(r.noGrowth)} + PVGO ${cur(r.pvgo)} = <b>${cur(r.V)}</b></div>
+   <div class="xl">Market-implied r${tip("Lecture 4 objective (slide 38): the r at which the DDM value equals the market price, holding forecasts and g constant.")}: <b>${imp === null ? "n/a" : pct(imp, 2)}</b> vs ${pct(r.r, 2)} assumed</div>
+   <div class="xl">Stable year: g = ${pct(r.roeS, 1)} × (1 − ${pct(r.payS, 0)}) = <b>${pct(r.g, 2)}</b>; dividends grow ${pct(r.gImp, 1)} into year ${N + 1} ${r.reconciled === true ? '<b class="pos">✓ reconciles</b>' : r.reconciled === false ? '<b class="neg">⚠ does not reconcile</b>' : ""}</div>
+   ${bs ? `<div class="xl">Lecture table: <b class="${bs.m === bs.tot ? "pos" : "neg"}">${bs.m}/${bs.tot}</b> cells match${bs.ok ? "" : " (inputs modified)"}. Model ${cur(r.V)} vs lecture ≈ ${cur(LEC.P)} (${spct(r.V / LEC.P - 1)}); the lecture rounds r to 9.9%.</div>` : ""}`;
+  const dl = [...r.rows.map(w => lab(w.t)), `Y${N + 1} TV`];
+  el.innerHTML = head + `<div class="obody">
+   <div class="kpirow">
+    <div class="hk main"><div class="hl">Intrinsic value per share${tip("P₀ = PV of explicit dividends + PV of terminal value, discounted at r (Lecture 4, slides 25 and 43).")}</div><div class="hv">${cur(r.V)}</div><div class="hs">Multi-stage DDM, ${N} explicit years</div></div>
+    <div class="hk inp"><div class="hl">Market price (input)</div><div class="hv">${r.price > 0 ? cur(r.price) : "n/a"}</div><div class="hs">${cap}</div></div>
+    <div class="hk ${upCls}"><div class="hl">Upside / (downside)${tip("Intrinsic value / market price − 1. A model output, not a recommendation.")}</div><div class="hv ${cls(up)}">${spct(up)}</div><div class="hs">${up === null ? "enter a market price" : up >= 0 ? "model above market" : "model below market"}</div></div>
+    <div class="hk"><div class="hl">Required return − g${tip("Spread r − g in the Gordon formula. A small spread makes terminal value very sensitive.")}</div><div class="hv">${pct(r.spread, 2)}</div><div class="hs">TV is ${pct(r.tvPct, 0)} of value</div></div>
+   </div>
+   <div class="strip">
+    ${cell("No-growth price", cur(r.noGrowth), "EPS₁ / r", "EPS₁ / r: value if all earnings were paid out and there were no growth opportunities (slide 37).")}
+    ${cell("PVGO", r.pvgoFlag ? `<span class="${r.pvgo < 0 ? "neg" : ""}">${cur(r.pvgo)}</span>` : cur(r.pvgo), r.pvgoFlag ? `<span class="neg">⚠ normalised ${cur(r.pvgoNorm)}</span>` : (r.pvgo !== null ? pct(r.pvgo / r.V, 0) + " of value" : ""), "Intrinsic value − EPS₁/r (slide 37): the part of value due to growth. If EPS₁ is unrepresentative (e.g. a one-year ROE spike) the tile is flagged in red and shows PVGO on normalised EPS = stable ROE × BE₀ / r.")}
+    ${cell("Implied P/E", mult(r.impliedPE), "market " + mult(r.marketPE), "Model-implied P/E = intrinsic value / EPS₁. Market P/E uses the observed price.")}
+    ${cell("Fwd dividend yield", pct(r.dy1, 2), "trailing " + pct(r.dy0, 2), "Forward = D₁ / price; trailing = D₀ / price (slide 34).")}
+    ${cell("PV explicit dividends", cur(r.pvExplicit), pct(r.explPct, 0) + " of value")}
+    ${cell("PV terminal value", cur(r.pvTV), "TV " + cur(r.TV), "Gordon value at end of year N, discounted N periods.")}
+   </div>
+   <div class="charts">
+    <div class="ccard"><h3>Dividend per share</h3><div class="cbody">${barChart(dl, [...r.rows.map(w => w.dps), r.term.dps], { c: 1, color: DC.dps, fmt: v => cur(v), ax: v => cur(v, 1), title: "DPS", termLast: true })}</div></div>
+    <div class="ccard"><h3>Earnings per share</h3><div class="cbody">${barChart(dl, [...r.rows.map(w => w.eps), r.term.eps], { c: 1, color: DC.eps, fmt: v => cur(v), ax: v => cur(v, 1), title: "EPS", termLast: true })}</div></div>
+    <div class="ccard"><h3>ROE and payout ratio</h3><div class="cbody">${lineChart(r.rows.map(w => lab(w.t)), [{ name: "ROE", vals: r.rows.map(w => w.roe), color: DC.roe }, { name: "Payout", vals: r.rows.map(w => w.pay), color: DC.pay }], true)}</div></div>
+    <div class="ccard"><h3>Value composition</h3><div class="cbody">${donut([{ label: "PV explicit dividends", val: r.pvExplicit, frac: r.explPct, color: DC.exp }, { label: "PV terminal value", val: r.pvTV, frac: r.tvPct, color: DC.tv }], true)}</div></div>
+    <div class="ccard"><h3>Bear / base / bull</h3><div class="cbody">${scenChart(true, DC)}</div></div>
+    <div class="ccard"><h3>Cross-checks</h3><div class="cbody" style="overflow:auto">${xc}</div></div>
+   </div></div>`;
+}
+
+const LEC = { BE: [10, 12, 14.4, 15.55], EPS: [2.5, 3.0, 2.30, 2.49], DPS: [0.5, 0.6, 1.15, 1.24], G: [null, .2, .92, .08], P: 50 };
+function lecUnmodified() {
+  const y = S.years; return num(S.r) === 9.9 && num(S.roeS) === 16 && num(S.payS) === 50 && num(S.BE0) === 10 && Number(S.N) === 3 && num(y[0].roe) === 25 && num(y[0].pay) === 20 && num(y[1].roe) === 25 && num(y[1].pay) === 20 && num(y[2].roe) === 16 && num(y[2].pay) === 50;
+}
+function benchCard() {
+  if (S.preset !== "lecture") return `<div class="card"><h3>Lecture benchmark</h3><p class="mut">Load the lecture example to compare against the Growth-Tech worked example (slides 39–44).</p></div>`;
+  const r = M.res, ok = lecUnmodified();
+  const rows = [], cols = [...r.rows.slice(0, 3), ...(Number(S.N) === 3 && r.term ? [{ t: 4, beg: r.term.beg, eps: r.term.eps, dps: r.term.dps, gr: r.term.gr }] : [])];
+  const chk = (a, b) => b === null ? "–" : (Math.abs(a - b) <= 0.0111 ? `<span class="pos">✓</span>` : `<span class="neg">✗</span>`);
+  const line = (name, key, ref, f) => `<tr><td>${name}</td>${cols.map((w, i) => `<td>${f(w[key])} <span class="mut">(${ref[i] === null ? "—" : f(ref[i])})</span> ${chk(w[key] ?? 0, ref[i])}</td>`).join("")}</tr>`;
+  return `<div class="card"><h3>Lecture benchmark: Growth-Tech (slides 39–44)</h3>
+   ${ok ? "" : `<div class="alert warn">Inputs differ from the lecture example, so this comparison is not like-for-like.</div>`}
+   <div class="scroll"><table class="t"><tr><th>Model (lecture)</th>${cols.map(w => `<th>Year ${w.t}</th>`).join("")}</tr>
+   ${line("Book equity", "beg", LEC.BE, v => v.toFixed(2))}${line("EPS", "eps", LEC.EPS, v => v.toFixed(2))}${line("Dividend", "dps", LEC.DPS, v => v.toFixed(2))}
+   <tr><td>Dividend growth</td>${cols.map((w, i) => `<td>${w.gr === null || w.gr === undefined ? "—" : pct(w.gr, 0)} <span class="mut">(${LEC.G[i] === null ? "—" : pct(LEC.G[i], 0)})</span> ${chk(w.gr ?? 0, LEC.G[i] === null ? null : LEC.G[i])}</td>`).join("")}</tr></table></div>
+   <p>Model P₀ = <b>${cur(r.V)}</b> vs lecture ≈ <b>${cur(LEC.P)}</b> (difference ${spct(r.V / LEC.P - 1)}). The lecture rounds r to 9.9%; the exact r that gives $50 is ${pct(M.impR, 2)}. Slide figures are rounded to 2 dp, so ✓ allows ±0.01.</p></div>`;
+}
+
+function vFc() {
+  const r = M.res, st = astrip([["BE₀", S.BE0 === "" ? "–" : cur(num(S.BE0))], ["Horizon N", S.N + " years"], ["ROE and payout", "set per year"], ["Stable ROE / payout", (S.roeS === "" ? "–" : S.roeS + "%") + " / " + (S.payS === "" ? "–" : S.payS + "%")], ["Terminal g (derived)", M.res.g === null ? "–" : pct(M.res.g, 2)]]);
+  if (!r.forecastOK) return st + opanel("Dividend forecast", "calculated", `<p>Enter beginning book equity and valid ROE and payout assumptions for every forecast year to generate the forecast.</p>`);
+  const rows = r.rows, t = r.term, N = rows.length;
+  const hdr = `<tr><th>Per share</th>${rows.map(w => `<th>Year ${w.t}</th>`).join("")}${t ? `<th class="tv">Year ${N + 1} (stable)${tip("Stable-growth year built from fundamentals: EPS = stable ROE × opening book equity (year-N closing equity), dividend = stable payout × EPS. This is the 'Year 4' column in the lecture table.")}</th>` : ""}</tr>`;
+  const line = (n, f, g, tv, tp) => `<tr><td>${n}${tp ? tip(tp) : ""}</td>${rows.map(w => `<td class="c">${f(g(w))}</td>`).join("")}${t ? `<td class="c tv">${tv === undefined ? "" : f(tv)}</td>` : ""}</tr>`;
+  const gdiff = rows.map(w => w.gr === null ? null : w.gr - w.sust);
+  const table = `<div class="scroll" style="flex:none"><table class="t cp">${hdr}
+   ${line("Beginning book equity", cur, w => w.beg, t?.beg, "BE_t = ending book equity of year t−1.")}
+   ${line("ROE", v => pct(v, 1), w => w.roe, t?.roe, "EPS_t / beginning book equity_t.")}
+   ${line("Earnings per share", cur, w => w.eps, t?.eps, "EPS_t = ROE_t × beginning book equity_t.")}
+   ${line("Payout ratio", v => pct(v, 1), w => w.pay, t?.pay, "DPS_t / EPS_t.")}
+   ${line("Plowback ratio", v => pct(v, 1), w => w.plow, t ? 1 - t.pay : undefined, "1 − payout.")}
+   ${line("Dividend per share", cur, w => w.dps, t?.dps, "DPS_t = EPS_t × payout_t.")}
+   ${line("Ending book equity", cur, w => w.end, t?.end, "BE_t + EPS_t − DPS_t.")}
+   ${line("Dividend growth", v => v === null ? "—" : pct(v, 1), w => w.gr, t?.gr, "DPS_t / DPS_{t−1} − 1. Year 1 uses D₀ if entered.")}
+   ${line("Sustainable growth ROE×(1−p)", v => pct(v, 1), w => w.sust, t ? t.roe * (1 - t.pay) : undefined, "Growth if ROE and payout stay constant (slide 31).")}
+   <tr><td>Actual − sustainable growth${tip("Differences arise when ROE or payout changes between years. In the stable column this is the reconciliation check: dividend growth into year N+1 minus g.")}</td>${gdiff.map(v => `<td class="${v === null ? "" : Math.abs(v) < .0005 ? "" : v > 0 ? "pos" : "neg"}">${v === null ? "—" : spct(v)}</td>`).join("")}${t ? `<td class="tv ${t.gr === null ? "" : Math.abs(t.gr - t.sust) <= .005 ? "pos" : "neg"}">${t.gr === null ? "—" : spct(Math.abs(t.gr - t.sust) < 5e-5 ? 0 : t.gr - t.sust)}</td>` : ""}</tr>
+  </table></div>`;
+  const dl = [...rows.map(w => lab(w.t)), ...(t ? [`Y${N + 1} TV`] : [])];
+  const dps = rows.map(w => w.dps), eps = rows.map(w => w.eps);
+  const charts = `<div class="crow">
+   ${ccard("Dividend per share", barChart(dl, t ? [...dps, t.dps] : dps, { c: 1, color: COL.blue, fmt: v => cur(v), ax: v => cur(v, 1), title: "DPS", termLast: !!t }))}
+   ${ccard("Earnings per share", barChart(dl, t ? [...eps, t.eps] : eps, { c: 1, color: COL.teal, fmt: v => cur(v), ax: v => cur(v, 1), title: "EPS", termLast: !!t }))}
+   ${ccard("ROE and payout ratio", lineChart(rows.map(w => lab(w.t)), [{ name: "ROE", vals: rows.map(w => w.roe), color: COL.amber }, { name: "Payout", vals: rows.map(w => w.pay), color: COL.violet }], true))}
+   <div class="ccard"><h3>Relationships used (slides 30–31)</h3><div class="cbody" style="overflow:auto">
+    <div class="formula sm">EPS<sub>t</sub> = ROE<sub>t</sub> × BE<sub>t</sub></div>
+    <div class="formula sm">DPS<sub>t</sub> = p<sub>t</sub> × EPS<sub>t</sub></div>
+    <div class="formula sm">BE<sub>t+1</sub> = BE<sub>t</sub> + EPS<sub>t</sub> − DPS<sub>t</sub></div>
+    <div class="formula sm">g = ROE × (1 − Payout)</div>
+    <p class="note-small">Stable year: D<sub>N+1</sub> = p<sub>s</sub>·ROE<sub>s</sub>·BE<sub>N+1</sub>. Growth jumps when ROE or payout change (92% in year 3).</p></div></div>
+  </div>`;
+  return st + opanel("Model outputs: dividend forecast", "calculated from your inputs · dashed = stable-growth year", table + charts);
+}
+
+function benchCompact() {
+  if (S.preset !== "lecture") return "";
+  const r = M.res, ok = lecUnmodified();
+  const cols = [...r.rows.slice(0, 3), ...(Number(S.N) === 3 && r.term ? [{ t: 4, beg: r.term.beg, eps: r.term.eps, dps: r.term.dps, gr: r.term.gr }] : [])];
+  const chk = (a, b) => b === null ? "" : (Math.abs(a - b) <= 0.0111 ? `<span class="pos">✓</span>` : `<span class="neg">✗</span>`);
+  const line = (name, key, ref) => `<tr><td>${name}</td>${cols.map((w, i) => `<td>${w[key].toFixed(2)} <span class="mut">(${ref[i].toFixed(2)})</span> ${chk(w[key], ref[i])}</td>`).join("")}</tr>`;
+  return `<div class="ccard"><h3>Lecture benchmark, Growth-Tech: model (lecture)</h3>
+   ${ok ? "" : `<div class="xl neg">Inputs differ from the lecture example: not like-for-like.</div>`}
+   <table class="t cp"><tr><th></th>${cols.map(w => `<th>Year ${w.t}</th>`).join("")}</tr>
+   ${line("Book equity", "beg", LEC.BE)}${line("EPS", "eps", LEC.EPS)}${line("Dividend", "dps", LEC.DPS)}
+   <tr><td>Dividend growth</td>${cols.map((w, i) => `<td>${LEC.G[i] === null ? "—" : `${pct(w.gr, 0)} <span class="mut">(${pct(LEC.G[i], 0)})</span> ${chk(w.gr, LEC.G[i])}`}</td>`).join("")}</tr></table>
+   <p>Model P₀ ${cur(r.V)} vs lecture ≈ ${cur(LEC.P)} (${spct(r.V / LEC.P - 1)}); exact r giving $50 is ${pct(M.impR, 2)}.</p></div>`;
+}
+function vDdm() {
+  const r = M.res, dash = x => (x === "" || x === undefined) ? "–" : x;
+  const st = astrip([["Required return r", dash(S.r) === "–" ? "–" : S.r + "%"], ["Stable ROE / payout", (S.roeS === "" ? "–" : S.roeS + "%") + " / " + (S.payS === "" ? "–" : S.payS + "%")], ["Terminal g (derived)", M.res.g === null ? "–" : pct(M.res.g, 2)], ["Horizon N", S.N + " years"], ["Market price", S.price === "" ? "–" : cur(num(S.price))]]);
+  if (!r.valid) return st + opanel("DDM valuation", "calculated", blocked());
+  const N = r.N, t = r.term;
+  const tbl = `<div class="ccard"><table class="t cp"><tr><th>Year</th><th>Dividend D<sub>t</sub></th><th>Discount factor 1/(1+r)<sup>t</sup></th><th>PV of dividend</th></tr>
+   ${r.rows.map(w => `<tr><td>Year ${w.t}</td><td class="c">${cur(w.dps, 4)}</td><td class="c">${w.df.toFixed(6)}</td><td class="c">${cur(w.pv, 4)}</td></tr>`).join("")}
+   <tr class="tot"><td>PV of explicit dividends (Y1–${N})</td><td></td><td></td><td class="c">${cur(r.pvExplicit, 4)}</td></tr>
+   <tr><td>Terminal dividend D<sub>${N + 1}</sub> = p<sub>s</sub> × ROE<sub>s</sub> × BE<sub>${N + 1}</sub>${tip(`${pct(r.payS, 1)} × ${pct(r.roeS, 1)} × ${cur(t.beg)} = ${cur(t.dps, 4)}. Built from stable fundamentals, not D_N(1+g).`)}</td><td class="c tv">${cur(t.dps, 4)}</td><td></td><td></td></tr>
+   <tr><td>Terminal value TV<sub>${N}</sub> = D<sub>${N + 1}</sub>/(r − g)${tip("Gordon value at the END of year N (slide 26), so it is discounted N periods.")}</td><td class="c tv">${cur(r.TV, 4)}</td><td class="c">${r.dfN.toFixed(6)}</td><td class="c">${cur(r.pvTV, 4)}</td></tr>
+   <tr class="tot"><td>Intrinsic value per share P₀</td><td></td><td></td><td class="c" style="font-size:15px">${cur(r.V, 4)}</td></tr></table></div>`;
+  const frm = `<div class="ccard"><h3>Substituted formulas</h3>
+   <div class="formula sm">P₀ = Σ<sub>t=1..${N}</sub> D<sub>t</sub>/(1+r)<sup>t</sup> + TV<sub>${N}</sub>/(1+r)<sup>${N}</sup></div>
+   <div class="formula sm">g = ROE<sub>s</sub>(1 − p<sub>s</sub>) = ${pct(r.roeS, 1)} × (1 − ${pct(r.payS, 1)}) = ${pct(r.g, 2)}</div>
+   <div class="formula sm">TV<sub>${N}</sub> = ${t.dps.toFixed(4)} / (${(r.r * 100).toFixed(2)}% − ${(r.g * 100).toFixed(2)}%) = ${r.TV.toFixed(4)}</div>
+   <div class="formula sm">P₀ = ${r.pvExplicit.toFixed(4)} + ${r.TV.toFixed(4)} × ${r.dfN.toFixed(6)} = <b>${r.V.toFixed(4)}</b></div>
+   </div>`;
+  const met = `<div class="ccard"><h3>Valuation metrics</h3><table class="t cp">
+    <tr><td>Upside / (downside)${tip("Intrinsic value / market price − 1.")}</td><td class="${cls(r.upside)}">${spct(r.upside)}</td></tr>
+    <tr><td>No-growth price EPS₁/r${tip("Price if all earnings were paid out and there were no growth (slide 37).")}</td><td class="c">${cur(r.noGrowth)}</td></tr>
+    <tr><td>PVGO = P₀ − no-growth price${tip("Value attributable to growth opportunities (slide 37). Flagged ⚠ when EPS₁ is unrepresentative.")}</td><td class="${r.pvgo < 0 ? "neg" : "c"}">${cur(r.pvgo)}${r.pvgoFlag ? " ⚠" : ""}</td></tr>
+    <tr><td>PVGO on normalised EPS${tip(`Normalised EPS = stable ROE × BE₀ = ${cur(r.epsNorm)}: what the existing assets earn at the stable return, ignoring year-1 spikes. PVGO = P₀ − normalised EPS / r.`)}</td><td class="${r.pvgoNorm < 0 ? "neg" : "c"}">${cur(r.pvgoNorm)}</td></tr>
+    <tr><td>Implied P/E (model) = P₀ / EPS₁</td><td class="c">${mult(r.impliedPE)}</td></tr>
+    <tr><td>Market P/E = price / EPS₁</td><td class="c">${mult(r.marketPE)}</td></tr>
+    <tr><td>Dividend yield, trailing D₀/price</td><td class="c">${pct(r.dy0, 2)}</td></tr>
+    <tr><td>Dividend yield, forward D₁/price</td><td class="c">${pct(r.dy1, 2)}</td></tr>
+    <tr><td>Terminal value % of value</td><td class="c">${pct(r.tvPct)}</td></tr>
+    <tr><td>Explicit forecast % of value</td><td class="c">${pct(r.explPct)}</td></tr>
+    <tr><td>Spread r − g</td><td class="c">${pct(r.spread, 2)}</td></tr>
+    <tr><td>Dividend growth Y2…Y${N}, terminal</td><td class="c">${r.rows.slice(1).map(w => pct(w.gr, 0)).join(" · ")} · ${pct(r.g, 1)}</td></tr></table></div>`;
+  const comp = `<div class="ccard grow"><h3>Value composition</h3><div class="cbody">${donut([{ label: "PV explicit dividends", val: r.pvExplicit, frac: r.explPct, color: COL.blue }, { label: "PV terminal value", val: r.pvTV, frac: r.tvPct, color: COL.amber }], true)}</div></div>`;
+  const fit = `<div class="ccard"><p><b>Fit:</b> intrinsic value = no-growth price (${cur(r.noGrowth)}) + PVGO (${cur(r.pvgo)}). Model P/E ${mult(r.impliedPE)} uses the DDM value; market P/E ${mult(r.marketPE)} uses the price (slides 33–37).</p></div>`;
+  return st + opanel("Model outputs: DDM valuation", "calculated from your inputs", `<div class="cols2"><div class="col">${tbl}${frm}${benchCompact()}</div><div class="col">${met}${comp}${fit}</div></div>`);
+}
+
+function heatTable() {
+  const g = M.grid, base = M.res, mode = S.heatMode;
+  const ref = base.price > 0 ? base.price : base.V, refName = base.price > 0 ? "market price" : "base value", CAP = Math.log(1.5);
+  const head = `<tr><th>r ↓ / g →</th>${g.gs.map((x, j) => `<th class="${j === 2 ? "hl" : ""}">${pct(x, 2)}</th>`).join("")}</tr>`;
+  let nNA = 0, nThin = 0;
+  const body = g.cells.map((row, i) => `<tr><th class="${i === 2 ? "hl" : ""}" style="text-align:left">${pct(g.rs[i], 2)}</th>${row.map((c, j) => {
+    const isBase = i === 2 && j === 2;
+    if (c.V === null) { nNA++; return `<td class="na" title="Invalid: g must be below r and below the stable ROE (stable payout between 0% and 100%)">N/A</td>`; }
+    // diverging log scale around the reference, saturating at +/-50%, so extreme values near r = g cannot dominate
+    const tt = Math.max(-1, Math.min(1, Math.log(c.V / ref) / CAP)), amt = Math.round(Math.abs(tt) * 55);
+    const bg = `color-mix(in srgb, var(${tt >= 0 ? "--pos" : "--neg"}) ${amt}%, var(--panel2))`;
+    const thin = c.r - c.g < 0.01; if (thin) nThin++;
+    const up = base.price > 0 ? c.V / base.price - 1 : null;
+    const val = cur(c.V) + (thin ? "†" : "");
+    const main = mode === "upside" && up !== null ? spct(up) + (thin ? "†" : "") : val, sub = mode === "upside" ? cur(c.V) : (up !== null ? spct(up) : "");
+    return `<td class="${isBase ? "base" : ""}" style="background:${bg}" title="r − g = ${((c.r - c.g) * 100).toFixed(2)} pp">${main}<small>${sub}</small></td>`;
+  }).join("")}</tr>`).join("");
+  const notes = [
+    `Rows: required return r. Columns: terminal g, varied through the stable payout with stable ROE held.`,
+    `Colour: green above the ${refName}, red below, saturating at ±50% so extreme cells cannot dominate. Outlined cell = base case.`,
+    nThin ? `† r − g below 1 pp: valuation extremely sensitive, treat with caution.` : "",
+    g.scaled ? `Auto-fit: steps reduced from ${(g.reqR * 100).toFixed(2)} / ${(g.reqG * 100).toFixed(2)} pp to ${(g.sr * 100).toFixed(2)} / ${(g.sg * 100).toFixed(2)} pp (r / g) so every cell keeps r − g ≥ ${(g.minSpread * 100).toFixed(2)} pp.` : "",
+    nNA ? `${nNA} cell${nNA > 1 ? "s are" : " is"} N/A (g ≥ r or stable payout outside 0–100%)${g.mode === "manual" ? "; switch Grid steps to Auto-fit to avoid them" : ""}.` : ""
+  ].filter(Boolean).join(" ");
+  return `<div class="scroll"><table class="t heat">${head}${body}</table></div><div class="note-small">${notes}</div>`;
+}
+function vSensOut() {
+  const r = M.res;
+  if (!r.valid) return opanel("Model outputs: sensitivity and scenarios", "calculated", blocked());
+  const g = M.grid, sc = M.scen;
+  const rUp = g.cells[1][2].V, rDn = g.cells[3][2].V, gUp = g.cells[2][3].V, gDn = g.cells[2][1].V;
+  const scRows = ["bear", "base", "bull"].map(k => { const s = sc[k], m = s.res; return `<tr><td>${k[0].toUpperCase() + k.slice(1)}</td><td>${pct(s.r, 2)}</td><td>${pct(s.g, 2)}</td><td>${s.droe >= 0 ? "+" : "−"}${Math.abs(s.droe)} pp</td><td class="c">${m.valid ? cur(m.V) : "invalid"}</td><td class="${m.valid ? cls(m.upside) : ""}">${m.valid ? spct(m.upside) : "n/a"}</td></tr>`; }).join("");
+  const left = `<div class="col"><div class="ccard grow"><h3>Intrinsic value per share: r × terminal g${tip("Each cell re-runs the full DDM with that r and g. Explicit dividends are unchanged; terminal dividend, terminal value and discounting change.")}</h3>${heatTable()}</div></div>`;
+  const right = `<div class="col">
+    <div class="ccard grow"><h3>Bear / base / bull</h3><div class="cbody">${scenChart(true)}</div></div>
+    <div class="ccard"><table class="t cp"><tr><th>Scenario</th><th>r</th><th>g</th><th>ROE shift</th><th>Value</th><th>vs market</th></tr>${scRows}</table></div>
+    <div class="ccard"><p>r ${pct(g.rs[2], 2)} → ${pct(g.rs[1], 2)}: ${cur(rUp)} (${spct(rUp / r.V - 1, 0)}); → ${pct(g.rs[3], 2)}: ${cur(rDn)} (${spct(rDn / r.V - 1, 0)}).</p>
+    <p>g ${pct(g.gs[2], 2)} → ${pct(g.gs[3], 2)}: ${cur(gUp)} (${spct(gUp / r.V - 1, 0)}); → ${pct(g.gs[1], 2)}: ${cur(gDn)} (${spct(gDn / r.V - 1, 0)}). Value is convex in r − g.</p></div></div>`;
+  return opanel("Model outputs: sensitivity and scenarios", "calculated · same DDM engine for every cell", `<div class="cols2" style="grid-template-columns:1.15fr 1fr">${left}${right}</div>`);
+}
+
+/* ---------- Research note ---------- */
+function buildNoteCtl() {
+  $("#noteCtl").innerHTML = `<div class="toolbar"><button class="btn primary" data-act="genNote">Generate Research Note</button>
+  <button class="btn" data-act="printNote">Print / Save as PDF</button><button class="btn" data-act="copyNote">Copy text version</button><span class="note-small" id="noteStatus"></span>
+  <span class="keyl"><span><i class="sw calc"></i>Output generated from the model, not an input</span></span></div>`;
+}
+function buildNote() {
+  const r = M.res, nv = (v, d) => (v === "" || v === null || v === undefined) ? `${d || "Not provided"}` : v;
+  const B = [];
+  B.push({ t: "title", text: "EQUITY RESEARCH | VALUATION NOTE" });
+  B.push({ t: "meta", rows: [["Company", nv(S.name)], ["Ticker", nv(S.ticker)], ["Sector", nv(S.sector)], ["Country", nv(S.country)], ["Valuation date", nv(S.date)]] });
+  if (!r.valid) {
+    B.push({ t: "h", text: "Valuation not available" });
+    B.push({ t: "p", text: "The model cannot produce a valuation with the current inputs:" });
+    B.push({ t: "ul", items: r.errors });
+    return B;
+  }
+  const N = r.N, t = r.term, up = r.upside, price = r.price;
+  const rel = up === null ? "no market price was entered, so no comparison can be made" : Math.abs(up) < 0.02 ? `the model value is broadly in line with the market price (${spct(up)})` : up > 0 ? `the model value is ${pct(up)} above the market price` : `the model value is ${pct(-up)} below the market price`;
+  B.push({ t: "h", text: "1. Investment summary" });
+  B.push({ t: "p", text: `${nv(S.name, "The company")} (${nv(S.ticker, "ticker not provided")}) operates in the ${nv(S.sector, "sector not provided")} sector; country: ${nv(S.country, "not provided")}. ${S.desc ? "Analyst-provided description: " + S.desc : "No company description was provided."} Equity market capitalisation: ${num(S.shares) > 0 && price > 0 ? cur(num(S.shares) * price, 0) + " million (" + num(S.shares) + " million shares)" : "not provided"}.` });
+  B.push({ t: "table", head: ["Metric", "Value"], rows: [["Current market price", price > 0 ? cur(price) : "Not provided"], ["DDM intrinsic value per share", cur(r.V)], ["Implied upside / (downside)", spct(up)]] });
+  B.push({ t: "p", text: `On the inputs entered, ${rel}. This is a model output that depends entirely on the stated assumptions.` });
+  B.push({ t: "h", text: "2. Valuation methodology" });
+  B.push({ t: "p", text: `The valuation applies a multi-stage dividend discount model (FM439 Lecture 4). Under the no-bubble assumption, the price of a stock equals the present value of its expected dividends discounted at the stock’s expected return r.` });
+  B.push({ t: "p", text: `Explicit period (years 1–${N}): earnings per share equal ROE × beginning book equity; dividends equal EPS × payout ratio; retained earnings (plowback) are added to book equity, which determines the next year’s earnings. ROE and payout are set separately for each year.` });
+  B.push({ t: "p", text: `Stable-growth year: from year ${N + 1} the firm is assumed to earn a stable ROE of ${pct(r.roeS, 1)} and pay out ${pct(r.payS, 1)} of earnings, so dividend growth is g = ROE × (1 − payout) = ${pct(r.g, 2)}. The first stable dividend is built from fundamentals: D${N + 1} = payout × ROE × BE${N + 1} = ${pct(r.payS, 1)} × ${pct(r.roeS, 1)} × ${cur(t.beg)} = ${cur(t.dps, 4)}. The Gordon growth formula gives TV at the end of year ${N} = D${N + 1} / (r − g) = ${cur(t.dps, 4)} / (${pct(r.r, 2)} − ${pct(r.g, 2)}) = ${cur(r.TV)}, discounted back ${N} years.` });
+  B.push({ t: "p", text: `Discount rate: ${pct(r.r, 2)}. Source: ${S.rNote ? S.rNote : "not provided"}. Terminal growth: ${pct(r.g, 2)}, derived from the stable ROE and payout rather than entered independently. Transition check: ${r.gImp === null ? "not available (year-" + N + " dividend is zero)" : "dividends grow " + pct(r.gImp, 1) + " into the stable year, which " + (r.reconciled ? "is consistent with" : "does not reconcile with") + " g"}.` });
+  B.push({ t: "h", text: "3. Financial forecasts" });
+  B.push({ t: "table", head: ["Per share", ...r.rows.map(w => "Year " + w.t), "Year " + (N + 1) + " (stable)"], rows: [
+    ["EPS", ...r.rows.map(w => cur(w.eps)), cur(t.eps)], ["DPS", ...r.rows.map(w => cur(w.dps)), cur(t.dps)],
+    ["ROE", ...r.rows.map(w => pct(w.roe)), pct(t.roe)], ["Payout ratio", ...r.rows.map(w => pct(w.pay)), pct(t.pay)],
+    ["Dividend growth", ...r.rows.map(w => w.gr === null ? "—" : pct(w.gr)), pct(t.gr)]] });
+  B.push({ t: "h", text: "4. Valuation summary" });
+  B.push({ t: "table", head: ["Item", "Value"], rows: [
+    ["PV of explicit dividends", cur(r.pvExplicit)], ["Terminal value (end of year " + N + ")", cur(r.TV)], ["PV of terminal value", cur(r.pvTV)],
+    ["Intrinsic value per share", cur(r.V)], ["PVGO (on EPS₁, lecture definition)", cur(r.pvgo)], ["PVGO on normalised EPS (stable ROE × BE₀ / r)", cur(r.pvgoNorm)], ["No-growth price (EPS₁ / r)", cur(r.noGrowth)],
+    ["Implied P/E (model, on EPS₁)", mult(r.impliedPE)], ["Market P/E (on EPS₁)", mult(r.marketPE)],
+    ["Dividend yield, trailing (D₀ / price)", pct(r.dy0, 2)], ["Dividend yield, forward (D₁ / price)", pct(r.dy1, 2)],
+    ["Terminal value share of intrinsic value", pct(r.tvPct)]] });
+  B.push({ t: "p", text: `Intrinsic value equals the no-growth price plus PVGO: ${cur(r.noGrowth)} + ${cur(r.pvgo)} = ${cur(r.V)}. PVGO is the part of value attributable to growth opportunities.${r.pvgoFlag === "eps1" ? ` PVGO on EPS₁ is negative because year-1 EPS (${cur(r.rows[0].eps)}) is far above the normalised EPS of the existing assets (${cur(r.epsNorm)} = stable ROE × BE₀); on normalised EPS the PVGO is ${cur(r.pvgoNorm)}.` : r.pvgoFlag === "spike" ? ` Year-1 EPS (${cur(r.rows[0].eps)}) is more than twice the normalised EPS (${cur(r.epsNorm)}), so PVGO on EPS₁ may be distorted; on normalised EPS the PVGO is ${cur(r.pvgoNorm)}.` : ""}` });
+  const g = M.grid, sc = M.scen, vs = g.cells.flat().filter(c => c.V !== null).map(c => c.V);
+  B.push({ t: "h", text: "5. Sensitivity and scenario analysis" });
+  B.push({ t: "p", text: `Across a grid of required returns (${pct(g.rs[0], 1)} to ${pct(g.rs[4], 1)}) and terminal growth rates (${pct(g.gs[0], 1)} to ${pct(g.gs[4], 1)}), valid intrinsic values range from ${cur(Math.min(...vs))} to ${cur(Math.max(...vs))}. Raising r by ${(g.sr * 100).toFixed(2)} pp changes value to ${cur(g.cells[3][2].V)}; raising g by ${(g.sg * 100).toFixed(2)} pp (delivered through a lower stable payout, stable ROE held) gives ${cur(g.cells[2][3].V)}. Value is highly convex in the spread r − g (currently ${pct(r.spread, 2)}).` });
+  B.push({ t: "table", head: ["Scenario", "r", "Terminal g", "ROE shift", "Intrinsic value", "vs market"], rows: ["bear", "base", "bull"].map(k => { const s = sc[k]; return [k[0].toUpperCase() + k.slice(1), pct(s.r, 2), pct(s.g, 2), (s.droe >= 0 ? "+" : "−") + Math.abs(s.droe) + " pp", s.res.valid ? cur(s.res.V) : "invalid", s.res.valid ? spct(s.res.upside) : "n/a"]; }) });
+  B.push({ t: "h", text: "6. Key risks and limitations" });
+  B.push({ t: "ul", items: [
+    "Dividend policy: payouts are discretionary; a change in payout policy changes every forecast dividend.",
+    "Forecasting uncertainty: all forecasts are analyst assumptions entered in the model, not company guidance or consensus (none was provided).",
+    "Changes in ROE: earnings and growth depend on ROE persisting; ROE tends to decline over time (Lecture 4, slide 38).",
+    "Stable-state assumptions: terminal growth is derived from the stable ROE and payout; if the explicit period does not transition smoothly into them, the valuation is unreliable.",
+    `Unsustainable high growth: peak dividend growth in the explicit period is ${pct(Math.max(...r.rows.map(w => w.gr ?? 0)), 0)}; growth far above the terminal rate cannot persist.`,
+    `Sensitivity: terminal value is ${pct(r.tvPct, 0)} of intrinsic value and the spread r − g is ${pct(r.spread, 2)}, so small changes to r or g move the valuation materially.`,
+    "Applicability: a DDM is less suitable for firms that do not pay dividends consistently, or where buybacks are a major payout channel (the constant share-count assumption on slide 32 would fail).",
+    "No company-specific news, peer data, analyst consensus or financial results were used or provided." ] });
+  B.push({ t: "h", text: "7. Analyst conclusion" });
+  B.push({ t: "p", text: `Using a ${N}-year explicit forecast, a required return of ${pct(r.r, 2)} and terminal growth of ${pct(r.g, 2)}, the model estimates intrinsic value of ${cur(r.V)} per share${price > 0 ? ` against a market price of ${cur(price)}; ${rel}` : ""}. Scenario values range from ${cur(sc.bear.res.valid ? sc.bear.res.V : null)} (bear) to ${cur(sc.bull.res.valid ? sc.bull.res.V : null)} (bull).` });
+  B.push({ t: "p", text: `This note records a valuation relationship under stated assumptions; it is not a Buy, Hold or Sell recommendation. Further fundamental analysis is required, in particular on dividend sustainability, the discount rate, the durability of ROE and the terminal growth assumption.` });
+  return B;
+}
+function noteHTML(B) {
+  return B.map(b => b.t === "title" ? `<h1>${esc(b.text)}</h1>` : b.t === "meta" ? `<table class="meta">${b.rows.map(r => `<tr><td><b>${esc(r[0])}:</b></td><td>${esc(r[1])}</td></tr>`).join("")}</table>`
+    : b.t === "h" ? `<h2>${esc(b.text)}</h2>` : b.t === "p" ? `<p>${esc(b.text)}</p>` : b.t === "ul" ? `<ul>${b.items.map(i => `<li>${esc(i)}</li>`).join("")}</ul>`
+    : `<table><tr>${b.head.map(h => `<th>${esc(h)}</th>`).join("")}</tr>${b.rows.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</table>`).join("");
+}
+function noteText(B) {
+  return B.map(b => b.t === "title" ? b.text + "\n" : b.t === "meta" ? b.rows.map(r => `${r[0]}: ${r[1]}`).join("\n") + "\n" : b.t === "h" ? "\n" + b.text.toUpperCase() : b.t === "p" ? b.text : b.t === "ul" ? b.items.map(i => "- " + i).join("\n")
+    : (() => { const w = b.head.map((h, i) => Math.max(h.length, ...b.rows.map(r => String(r[i]).length))); const f = r => r.map((c, i) => i ? String(c).padStart(w[i]) : String(c).padEnd(w[i])).join("  "); return [f(b.head), ...b.rows.map(f)].join("\n"); })()).join("\n");
+}
+function renderNote() {
+  const B = buildNote();
+  $("#noteOut").innerHTML = opanel("Generated output: equity research note", `live, rebuilt from the model at ${new Date().toLocaleTimeString("en-GB")} · scroll inside the page`,
+   `<div class="notecols"><div class="paperwrap"><div class="paper" id="notePaper">${noteHTML(B)}</div></div>
+    <div class="col"><h3 style="margin:0">Copyable text version</h3><textarea class="txt" id="noteTxt" readonly>${esc(noteText(B))}</textarea></div></div>`);
+}
+
+/* ---------- Formula reference ---------- */
+function vRef() {
+  const c = (h, f, p, ref) => `<div class="rcard"><h3>${h}</h3>${f ? `<div class="formula">${f}</div>` : ""}<p>${p}</p><div class="ref">${ref}</div></div>`;
+  return `<div class="opanel fillp" style="border-color:var(--line)"><div class="phead refh">Formula reference, FM439 Lecture 4<span>reference material, neither input nor output</span></div>
+  <div class="obody"><div class="refgrid">
+  ${c("General valuation formula", "P₀ = Σ D<sub>t</sub> / (1+r)<sup>t</sup>", "Price is the PV of expected dividends at the expected return r.", "Slides 21–25")}
+  ${c("No-bubble assumption", "P<sub>T</sub>/(1+r)<sup>T</sup> → 0", "Price is driven only by dividends; the far-future price term vanishes.", "Slide 24")}
+  ${c("Constant growth formula", "P₀ = D₁ / (r − g)", "Growing perpetuity. Needs r > g; the tool blocks the valuation otherwise.", "Slide 26")}
+  ${c("Multi-stage DDM", "P₀ = Σ D<sub>t</sub>/(1+r)<sup>t</sup> + [D<sub>N+1</sub>/(r−g)]/(1+r)<sup>N</sup>", "Explicit dividends, then Gordon at end of year N, discounted N periods. D<sub>N+1</sub> = p<sub>s</sub>·ROE<sub>s</sub>·BE<sub>N+1</sub> is built from the stable ROE and payout.", "Slides 38–43")}
+  ${c("ROE and payout", "EPS = ROE × BE &nbsp; DPS = p × EPS", "BE<sub>t+1</sub> = BE<sub>t</sub> + (1−p)·EPS<sub>t</sub>. Retained earnings drive future earnings.", "Slides 30–31, 39–41")}
+  ${c("Sustainable growth", "g = ROE × (1 − Payout)", "Exact only for constant ROE, payout and share count. The stable year derives g from it: g is not typed in.", "Slides 31–32")}
+  ${c("Dividend yield", "DY = D₀ / P₀ ≈ r − g", "Trailing uses D₀; forward uses D₁. Both shown.", "Slides 34–35")}
+  ${c("Price-earnings ratio", "P/E = P₀ / EPS₁", "Model-implied P/E uses intrinsic value; market P/E uses price.", "Slide 36")}
+  ${c("PVGO", "PVGO = P₀ − EPS₁ / r", "No-growth price = EPS₁/r. PVGO is the part of price due to growth.", "Slide 37")}
+  ${c("Time-varying growth", "", "Early growth is unrealistically high; use Gordon only once ROE and plowback stabilise (year 4 in Growth-Tech). Finding r from a price: slide 38.", "Slides 38–44")}
+  <div class="rcard"><h3>Scope and limitations</h3><p>The valuation uses only the Lecture 4 dividend framework. DCF, residual income and multiples are excluded. CAPM appears only as an optional helper that fills in r (risk-free + β × ERP); it is not part of the valuation engine, and r can always be typed manually. All data are entered manually. Educational tool, not investment advice.</p></div>
+  </div></div></div>`;
+}
+
+/* ---------- Inputs page live bits ---------- */
+function renderInputBits() {
+  const r = M.res, el = $("#inputPreview"); if (!el) return;
+  const e = num(S.epsH), d = num(S.dpsH);
+  const hh = $("#histHints");
+  if (hh) hh.innerHTML = (e > 0 && d !== null && d >= 0) ? `Calculated: payout D₀/EPS = <b style="color:var(--calc)">${pct(d / e)}</b>${num(S.price) > 0 ? ` · trailing yield <b style="color:var(--calc)">${pct(d / num(S.price), 2)}</b>` : ""}${num(S.BE0) > 0 ? ` · ROE EPS/BE₀ <b style="color:var(--calc)">${pct(e / num(S.BE0))}</b>` : ""}` : "";
+  el.innerHTML = `<div class="mres"><div class="mh">Live result (calculated)</div>${r.valid ? `<div class="mb">
+    <div><div class="hl">Intrinsic value</div><div class="hv">${cur(r.V)}</div></div>
+    <div><div class="hl">Upside</div><div class="hv ${cls(r.upside)}">${spct(r.upside)}</div></div>
+    <div><div class="hl">r − g</div><div class="hv">${pct(r.spread, 2)}</div></div>
+    <div><div class="hl">TV share</div><div class="hv">${pct(r.tvPct, 0)}</div></div></div>` : `<div class="mb"><span class="note-small">Fix the errors above to see a valuation.</span></div>`}</div>`;
+  const cv = capmR(), co = $("#capmOut"), cn = $("#capmNote"), cb = $("#capmBtn");
+  if (co) {
+    co.textContent = cv === null ? "r = –" : `r = ${(+cv.toFixed(4))}%`;
+    const rn = num(S.r), match = cv !== null && rn !== null && Math.abs(rn - cv) < 1e-6;
+    cb.style.display = (cv !== null && !match) ? "" : "none";
+    cn.innerHTML = cv === null ? "" : match ? '<span class="pos">✓ r is set from CAPM</span>' : `<span style="color:var(--warn)">r is typed manually (${S.r === "" ? "empty" : S.r + "%"}) and differs from CAPM (${(+cv.toFixed(4))}%)</span>`;
+  }
+  const gc = $("#gCalc");
+  if (gc) gc.innerHTML = r.g === null ? "–" : `${pct(r.g, 2)} <small>= ${pct(r.roeS, 1)} × (1 − ${pct(r.payS, 1)})</small> ${r.reconciled === true ? '<span class="pos">✓</span>' : r.reconciled === false ? '<span style="color:var(--warn)">⚠ check</span>' : ""}`;
+  document.querySelectorAll("[data-gy]").forEach(c => {
+    if (c.dataset.gy === "S") { c.textContent = r.g === null ? "–" : pct(r.g, 2); return; }
+    const y = S.years[Number(c.dataset.gy)] || {}, ro = num(y.roe), pa = num(y.pay);
+    c.textContent = (ro === null || pa === null) ? "–" : pct(ro / 100 * (1 - pa / 100), 2);
+  });
+}
+
+/* ---------- Update cycle ---------- */
+let warnOpen = false;
+document.addEventListener("toggle", e => { if (e.target.id === "warnBox") warnOpen = e.target.open; }, true);
+function renderAlerts() {
+  const r = M.res; let h = "";
+  if (r.errors.length) h += `<div class="alert err"><b>${r.valid ? "Input errors" : "Valuation blocked"}</b><ul>${r.errors.map(e => `<li>${esc(e)}</li>`).join("")}</ul></div>`;
+  if (r.warns.length) h += `<details class="alert warn" id="warnBox" ${warnOpen ? "open" : ""}><summary><b>${r.warns.length} model warning${r.warns.length > 1 ? "s" : ""}</b> (click to ${warnOpen ? "hide" : "view"})</summary><ul>${r.warns.map(e => `<li>${esc(e)}</li>`).join("")}</ul></details>`;
+  $("#alerts").innerHTML = h;
+}
+function renderActive() {
+  if (tab === "dash") { renderDash(); renderDashAssump(); }
+  else if (tab === "fc") $("#v-fc").innerHTML = vFc();
+  else if (tab === "ddm") $("#v-ddm").innerHTML = vDdm();
+  else if (tab === "sens") $("#sensOut").innerHTML = vSensOut();
+  else if (tab === "note") { if (noteOn) renderNote(); else $("#noteOut").innerHTML = `<div class="card"><p class="mut">Press “Generate Research Note” to build the note from the current model.</p></div>`; }
+  else if (tab === "ref") $("#v-ref").innerHTML = vRef();
+  else if (tab === "inputs") renderInputBits();
+}
+function capmR() { const rf = num(S.capm && S.capm.rf), b = num(S.capm && S.capm.beta), e = num(S.capm && S.capm.erp); return (rf === null || b === null || e === null) ? null : rf + b * e; }
+function applyCapm() {
+  const v = capmR(); if (v === null) return;
+  S.r = String(+v.toFixed(4));
+  if (!S.rNote || S.rNote.startsWith("CAPM:")) S.rNote = `CAPM: risk-free ${S.capm.rf}% + beta ${S.capm.beta} × equity risk premium ${S.capm.erp}% = ${+v.toFixed(2)}%`;
+}
+function syncInputs() {
+  const pl = document.querySelector('input[data-st="plow"]');
+  if (pl && pl !== document.activeElement) { const ps = num(S.payS); pl.value = ps === null ? "" : +(100 - ps).toFixed(6); }
+  document.querySelectorAll("input[data-k],select[data-k],textarea[data-k]").forEach(el => {
+    if (el === document.activeElement) return;
+    const v = getPath(el.dataset.k); if (v !== undefined && el.value !== String(v)) el.value = v;
+  });
+}
+function update() {
+  M = buildBundle(S); syncInputs();
+  $("#coBadge").textContent = (S.name || "Unnamed company") + (S.ticker ? " · " + S.ticker : "");
+  renderAlerts(); renderActive();
+}
+function goTab(t) {
+  tab = t;
+  document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
+  document.querySelectorAll("section.view").forEach(s => s.classList.toggle("on", s.id === "v-" + t));
+  renderActive(); window.scrollTo(0, 0);
+}
+function setN(n) {
+  n = Number(n); const last = S.years[S.years.length - 1] || { roe: "", pay: "" };
+  while (S.years.length < n) S.years.push({ roe: last.roe, pay: last.pay });
+  S.years.length = n; S.N = n;
+}
+
+/* ---------- Events ---------- */
+document.addEventListener("input", e => {
+  const t = e.target;
+  if (t.dataset.yr !== undefined) {
+    const i = Number(t.dataset.yr), f = t.dataset.f, v = t.value;
+    if (f === "roe") S.years[i].roe = v;
+    else {
+      const other = f === "pay" ? "plow" : "pay";
+      S.years[i].pay = f === "pay" ? v : (v === "" ? "" : String(+(100 - Number(v)).toFixed(6)));
+      const o = document.querySelector(`input[data-yr="${i}"][data-f="${other}"]`);
+      if (o) o.value = v === "" ? "" : +(100 - Number(v)).toFixed(6);
+    }
+    update(); return;
+  }
+  if (t.dataset.st === "plow") { S.payS = t.value === "" ? "" : String(+(100 - Number(t.value)).toFixed(6)); update(); return; }
+  if (t.dataset.k) {
+    if (t.dataset.k === "N") { setN(t.value); buildInputs(); update(); return; }
+    setPath(t.dataset.k, t.value);
+    if (t.dataset.k.startsWith("capm.")) applyCapm();
+    if (t.dataset.k === "heatMode" || t.dataset.k === "ccy") { update(); return; }
+    update();
+  }
+});
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-act],[data-tab]"); if (!b) return;
+  if (b.dataset.tab) return goTab(b.dataset.tab);
+  const a = b.dataset.act;
+  if (a === "lecture") { S = PRESETS.lecture(); buildStatic(); update(); }
+  else if (a === "custom") { S = PRESETS.custom(); noteOn = false; buildStatic(); update(); }
+  else if (a === "reset") { S = PRESETS[S.preset || "lecture"](); buildStatic(); update(); }
+  else if (a === "genNote") { noteOn = true; renderNote(); $("#noteStatus").textContent = "Note generated from current inputs."; }
+  else if (a === "printNote") { if (!noteOn) { noteOn = true; renderNote(); } try { window.print(); } catch (x) { $("#noteStatus").textContent = "Printing is blocked in this view; use Copy text instead."; } }
+  else if (a === "copyNote") {
+    if (!noteOn) { noteOn = true; renderNote(); }
+    const txt = $("#noteTxt").value;
+    const fb = () => { const ta = $("#noteTxt"); ta.select(); try { document.execCommand("copy"); $("#noteStatus").textContent = "Copied."; } catch (x) { $("#noteStatus").textContent = "Select the text box and copy manually."; } };
+    try { navigator.clipboard.writeText(txt).then(() => $("#noteStatus").textContent = "Copied.", fb); } catch (x) { fb(); }
+  }
+  else if (a === "applyCapm") { applyCapm(); update(); }
+  else if (a === "theme") { const d = document.documentElement; d.dataset.theme = d.dataset.theme === "light" ? "dark" : "light"; update(); }
+});
+
+buildStatic(); update();
+</script>
+</body>
+</html>
